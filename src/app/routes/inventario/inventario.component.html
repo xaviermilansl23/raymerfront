@@ -1,0 +1,134 @@
+<mat-sidenav-container class="inventario-container">
+  <!-- Panel lateral único -->
+<mat-sidenav #sideNav mode="over" position="end" class="sidenav" (closedStart)="handleSideNavClose()">
+    <div class="panel-content" [ngClass]="{'formulario-active': currentView === 'formulario'}">
+      <!-- Categorías -->
+      <div class="categorias-view" *ngIf="currentView === 'categorias'">
+        <button mat-icon-button (click)="sideNav.close()" style="margin-bottom: 16px;">
+          <mat-icon>close</mat-icon>
+        </button>
+        <app-categorias
+         (abrirFormulario)="openFormulario()"
+         (productoSeleccionado)="openFormulario($event)">
+        </app-categorias>
+      </div>
+
+      <!-- Formulario -->
+      <div class="formulario-view" *ngIf="currentView === 'formulario'">
+        <h3 *ngIf="!selectedProduct">Crear Nuevo Tipo de Producto</h3>
+        <h3 *ngIf="selectedProduct">Editar Tipo de Producto</h3>
+        <app-dialogcategorias
+         [producto]="selectedProduct"
+         (closePanel)="ClosePanel()"></app-dialogcategorias>
+        <button mat-raised-button (click)="backToCategorias()">Volver a Categorías</button>
+      </div>
+
+      <!-- Crear Producto -->
+      <div class="producto-view" *ngIf="currentView === 'producto'">
+        <button mat-icon-button (click)="sideNav.close()" style="margin-bottom: 16px;">
+          <mat-icon>close</mat-icon>
+        </button>
+        <app-dialog-producto
+          *ngIf="currentView === 'producto'"
+          [producto]="selectedProduct"
+          (closePanel)="handleClosePanel()">
+        </app-dialog-producto>
+      </div>
+
+      <!-- Detalle Producto -->
+      <div class="detalle-producto-view" *ngIf="currentView === 'detalle-producto'">
+        <button mat-icon-button (click)="sideNav.close()" style="margin-bottom: 16px;">
+          <mat-icon>close</mat-icon>
+        </button>
+        <h3>Detalles del Producto</h3>
+        <app-detalle-producto
+          *ngIf="currentView === 'detalle-producto'"
+          [productoId]="selectedProductId!"
+          (editar)="onEditarProducto($event)"
+          (closePanel)="handleClosePanel()"
+          (eliminar)="handleClosePanel()">
+        </app-detalle-producto>
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <!-- Contenido principal -->
+  <mat-sidenav-content>
+
+    <div class="content">
+
+      <div class="card-listado mat-elevation-z6">
+        <div class="card-header">
+          <h2>Productos Disponibles</h2>
+        </div>
+
+
+
+        <!-- Filtros -->
+        <div class="card-toolbar">
+          <mat-form-field appearance="outline">
+            <mat-label>Buscar por nombre</mat-label>
+            <input matInput [(ngModel)]="filtroNombre" (input)="aplicarFiltros()">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Filtrar por tipo de producto</mat-label>
+            <mat-select [(ngModel)]="filtroTipoProducto" (selectionChange)="aplicarFiltros()">
+              <mat-option value="">Todos</mat-option>
+              <mat-option *ngFor="let tipo of tiposDeProductos" [value]="tipo.tipo_producto_id">
+                {{ tipo.tipo_producto_nombre }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <button mat-raised-button color="warn" (click)="limpiarFiltros()">Limpiar Filtros</button>
+          <br>
+               <button mat-raised-button color="accent" (click)="openCategorias()">
+        Categorías
+      </button>
+      <button mat-raised-button color="accent" (click)="openProductoFormulario()">
+        Agregar Producto
+      </button>
+        </div>
+
+        <!-- Grid de productos -->
+        <!-- Grid de productos -->
+<div class="product-grid">
+  <div
+    class="product-card"
+    *ngFor="let producto of productosFiltrados"
+    (click)="openProductoDetalle(producto.producto_id)"
+    title="{{ producto.nombre }}"
+  >
+    <img
+      [src]="producto.imagen_url"
+      alt="{{ producto.nombre }}"
+      class="product-image"
+      loading="lazy"
+    />
+
+    <h3 class="product-name">{{ producto.nombre }}</h3>
+
+    <!-- Descripción (máx 2 líneas) -->
+    <p class="product-desc">
+      {{ (producto.descripcion || 'Sin descripción disponible') }}
+    </p>
+
+    <!-- Precio FIFO y Stock -->
+    <div class="product-meta">
+      <span class="price">
+        Costo: Bs {{ producto.precio_fifo | number:'1.2-2' }}
+      </span>
+      <span class="stock" [ngClass]="{'stock-zero': (producto.stock_disponible || 0) <= 0}">
+        Stock: {{ producto.stock_disponible ?? 0 }}
+      </span>
+    </div>
+  </div>
+</div>
+
+      </div>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<router-outlet></router-outlet>

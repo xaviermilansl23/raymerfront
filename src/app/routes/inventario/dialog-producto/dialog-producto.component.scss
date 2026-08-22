@@ -1,0 +1,9 @@
+.image-preview {
+  width: 150px;  // Ancho fijo
+  height: 150px; // Alto fijo
+  object-fit: cover; // Ajusta la imagen sin deformarla
+  border-radius: 8px; // Bordes redondeados
+  display: block;
+  margin: 10px auto; // Centrar la imagen
+  border: 1px solid #ccc; // Borde opcional para destacar la imagen
+}

@@ -1,0 +1,140 @@
+$color-primario: #000000; // Verde institucional (puedes ajustar)
+$color-acento: #000000;
+$color-fondo-claro: #f9f9f9;
+$color-fondo-card: #eef4ec;
+$color-texto: #333;
+$radio-borde: 0px;
+
+.inventario-container {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #ffffff;
+}
+
+.sidenav {
+  width: 400px;
+  background-color: $color-fondo-claro;
+  padding: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid $color-primario;
+  border-top-right-radius: $radio-borde;
+  border-bottom-right-radius: $radio-borde;
+}
+
+.segundo-panel {
+  z-index: 1200;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+
+.content {
+  padding: 16px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+/*------------------------Estilo de producto---------------------------*/
+
+.product-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  margin: 16px;
+}
+
+/* -------------------- Estilos de Producto -------------------- */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax (220px, 1fr));
+  gap: 16px;
+  padding: 24px;
+  margin: 16px;
+}
+
+
+
+.product-card {
+  background-color: $color-fondo-card !important;
+  border-radius: $radio-borde;
+  border: 1px solid #c8e6c9;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  padding: 16px;
+  transition: transform 0.3s, box-shadow 0.3s;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.product-image {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: $radio-borde;
+  margin: 16px auto;
+  border: 2px solid $color-primario;
+}
+
+.product-name {
+  margin: 8px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: $color-primario;
+}
+
+/* -------------------- Responsive Design -------------------- */
+@media (max-width: 1200px) {
+  .product-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .product-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 16px;
+  }
+
+  .sidenav {
+    width: 90vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+    padding: 8px;
+  }
+
+  .product-card {
+    padding: 12px;
+  }
+
+  mat-toolbar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}

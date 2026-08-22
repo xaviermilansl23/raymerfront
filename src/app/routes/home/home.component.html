@@ -1,0 +1,33 @@
+<mat-card class="header-card mat-elevation-z3">
+  <div fxLayout="column" fxLayoutAlign="start start" fxLayoutGap="0.5rem">
+
+    <p class="titulo">USUARIO: <strong>{{nombreUsuario}}</strong>.</p>
+    <span class="rol">Rol: <strong>{{ rolesUsuario.join(', ') }}</strong></span>
+
+
+    <p class="mensaje-bloqueo" *ngIf="mensajeBloqueo">
+      <mat-icon color="warn" style="vertical-align: middle;">error_outline</mat-icon>
+      {{ mensajeBloqueo }}
+    </p>
+  </div>
+</mat-card>
+<br>
+<div class="contenedor-seccion" fxLayout="row wrap" fxLayoutGap="1rem" fxLayoutAlign="start start">
+  <!--<mat-card
+    class="card-acceso"
+    fxFlex.xs="100%"
+    fxFlex.sm="calc(50% - 0.5rem)"
+    fxFlex.md="calc(33.33% - 0.66rem)"
+    fxFlex.lg="calc(25% - 0.75rem)"
+    fxFlex.xl="calc(22% - 0.75rem)"
+    *ngFor="let item of accesosVisibles"
+    (click)="navegar(item.route)"
+    role="button"
+    tabindex="0"
+  >
+    <mat-icon class="icono">{{ item.icon }}</mat-icon>
+    <h3>{{ item.label }}</h3>
+  </mat-card>-->
+</div>
+
+

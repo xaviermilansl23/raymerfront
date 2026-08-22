@@ -1,0 +1,22 @@
+.scanner-container {
+  position: relative;
+}
+
+.scan-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 100px;
+  transform: translate(-50%, -50%);
+  border: 2px dashed #1b5e20;
+  border-radius: 8px;
+  animation: pulso 2s infinite;
+  z-index: 10;
+}
+
+@keyframes pulso {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}

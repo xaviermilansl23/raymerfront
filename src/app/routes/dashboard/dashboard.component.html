@@ -1,0 +1,66 @@
+<!-- ✅ Botón flotante para mostrar menú en móvil -->
+<button mat-icon-button
+        *ngIf="modoBarra === 'over'"
+        (click)="mainSidenav.toggle()"
+        style="position: fixed;
+               top: 16px;
+               right: 16px;
+               z-index: 2000;
+               background: #171717;
+               border-radius: 50%;
+               box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
+  <mat-icon style="color: white;">menu</mat-icon>
+</button>
+
+
+<mat-sidenav-container class="sidenav-container">
+  <!-- Solo visible en móvil -->
+  <mat-sidenav
+  #mainSidenav
+  class="sidenav"
+  fixedInViewport="true"
+  [mode]="modoBarra"
+  [opened]="abiertaBarra"
+  [ngClass]="{ 'collapsed': isCollapsed }"
+  position="start"
+>
+<!-- Logo institucional -->
+<div class="logo-container" *ngIf="!isCollapsed">
+  <img src="favicon.png" alt="Logo" />
+  <span class="sistema-titulo"></span>
+</div>
+
+
+
+    <mat-nav-list>
+<!-- Solo mostrar el botón colapsar/expandir en escritorio -->
+<div class="toggle-button" *ngIf="modoBarra === 'side'" (click)="toggleSidenav()">
+  <mat-icon>{{ isCollapsed ? 'menu' : 'menu_open' }}</mat-icon>
+</div>
+
+      <ng-container *ngFor="let item of menuItems">
+
+        <ng-container *ngIf="puedeVer(item)">
+
+          <a mat-list-item [routerLink]="item.route">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <span class="menu-label" *ngIf="!isCollapsed">{{ item.label }}</span>
+          </a>
+        </ng-container>
+      </ng-container>
+
+      <mat-divider></mat-divider>
+
+      <a mat-list-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span class="menu-label" *ngIf="!isCollapsed">Cerrar sesión</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

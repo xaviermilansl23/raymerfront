@@ -1,0 +1,13 @@
+<div class="categorias-container">
+  <button mat-raised-button (click)="abrirPanelFormulario()">
+    Nuevo Tipo de Producto
+  </button>
+  <br><br>
+
+  <div class="card-grid">
+    <mat-card *ngFor="let tipo of tipoProductos" class="card" (click)="seleccionarProducto(tipo)">
+      <mat-card-title>{{ tipo.nombre }}</mat-card-title>
+    </mat-card>
+  </div>
+</div>
+

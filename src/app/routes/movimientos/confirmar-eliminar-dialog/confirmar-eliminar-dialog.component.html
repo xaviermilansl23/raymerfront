@@ -1,0 +1,11 @@
+<h2 mat-dialog-title>Eliminar Gasto</h2>
+
+<div mat-dialog-content>
+  <p>¿Estás seguro de que deseas eliminar este gasto?</p>
+  <p><strong>{{ data.nombre }}</strong> - Bs {{ data.total }}</p>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-raised-button color="warn" (click)="confirmar()">Eliminar</button>
+</div>

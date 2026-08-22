@@ -1,0 +1,15 @@
+{
+  "routes": {
+    "/": {},
+    "/dashboard": {},
+    "/dashboard/configuracion": {},
+    "/dashboard/home": {},
+    "/dashboard/inventario": {},
+    "/dashboard/movimientos": {},
+    "/dashboard/pagos": {},
+    "/dashboard/scanner": {},
+    "/dashboard/usuarios": {},
+    "/dashboard/ventas": {},
+    "/login": {}
+  }
+}

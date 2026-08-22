@@ -1,0 +1,23 @@
+<div class="reporte-container">
+  <h1>📊 Reporte de Ventas del Sistema</h1>
+
+  <div class="info-sistema" *ngIf="infoSistema">
+    <p><strong>Nombre del Sistema:</strong> {{ infoSistema.nombre_sistema }}</p>
+    <p><strong>Versión:</strong> {{ infoSistema.version }}</p>
+  </div>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Fecha inicio</mat-label>
+    <input matInput [(ngModel)]="fechaInicio" type="date" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Fecha fin</mat-label>
+    <input matInput [(ngModel)]="fechaFin" type="date" />
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" (click)="generarReporte()">
+    <mat-icon>picture_as_pdf</mat-icon>
+    Generar Reporte PDF
+  </button>
+</div>

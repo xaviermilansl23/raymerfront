@@ -1,0 +1,218 @@
+
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+@use '@angular/material' as mat;
+@use 'ngx-toastr/toastr';
+
+
+
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}/* You can add global styles to this file, and also import other style files */
+
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #e8f5e9; // Fondo general suave verde claro
+}
+
+// === CARD LISTADO ===
+.card-listado {
+  background: linear-gradient(white, white) padding-box,
+              linear-gradient(135deg, #000000) border-box;
+  border: 4px solid transparent;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+// === CABECERA ===
+.card-header {
+  background: linear-gradient(135deg, #000000); // 💚 Degradado verde institucional
+  color: white;
+  padding: 14px 20px;
+  border-radius: 8px 8px 0 0;
+  margin: -20px -20px 20px -20px;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+}
+
+// === TOOLBAR ===
+.card-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  mat-form-field {
+    width: 300px;
+  }
+
+  .add-user-button {
+    background-color: #000000;  // Verde fuerte
+    color: white !important;
+    border-radius: 6px;
+    font-weight: 500;
+
+    mat-icon {
+      margin-right: 4px;
+      color: white !important;
+    }
+
+    span {
+      color: white !important;
+    }
+
+    &:hover {
+      background-color: #000000; // Verde más brillante al hover
+    }
+  }
+}
+
+// === TABLA ===
+.full-width {
+  width: 100%;
+}
+
+.mat-table {
+  border-collapse: collapse !important;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.mat-header-cell,
+.mat-cell {
+  border-bottom: 1px solid #000000 !important;  // Línea divisoria verde oscuro
+  border-right: 1px solid #ccc !important;
+  padding: 8px 12px;
+}
+
+.mat-header-row .mat-header-cell:last-child,
+.mat-row .mat-cell:last-child {
+  border-right: none !important;
+}
+
+.mat-header-cell {
+  background-color: #ffffff; // Verde claro
+  font-weight: bold;
+  color: #1b5e20;
+}
+
+.mat-row {
+  background-color: #fff;
+
+  &:hover {
+    background-color: #f1f8e9; // Hover verde suave
+  }
+}
+
+.mat-cell {
+  color: #2e7d32;
+}
+
+// === ICONOS DE ACCIONES ===
+button.mat-icon-button[color="primary"] mat-icon {
+  color: #1b5e20; // Editar - verde oscuro
+}
+
+button.mat-icon-button[color="warn"] mat-icon {
+  color: #c62828; // Eliminar - rojo
+}
+
+button.mat-icon-button[color="accent"] mat-icon {
+  color: #2e7d32; // Asignar rol - verde
+}
+
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+::ng-deep th.mat-mdc-header-cell {
+  background-color: #2e7d32 !important;
+  color: white !important;
+  font-weight: bold;
+  padding: 12px !important;
+  text-align: left !important;
+  border-bottom: 1px solid #1b5e20 !important;
+}
+
+
+
+.tabla-scroll {
+  width: 100%;
+
+  @media (max-width: 768px) {
+    overflow-x: auto;
+
+    table {
+      display: block;
+      width: fit-content;
+      min-width: max-content;
+      table-layout: auto;
+    }
+  }
+
+  @media (min-width: 769px) {
+    table {
+      width: 100%;
+      display: table;
+      table-layout: auto;
+    }
+  }
+}
+
+
+
+.formulario-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  mat-form-field {
+    flex: 1 1 100%; // ocupa 100% en móviles
+    min-width: 250px; // mínimo para tablets/PC
+  }
+}
+
+@media (min-width: 600px) {
+  .formulario-container {
+    mat-form-field {
+      flex: 1 1 48%; // para hacerlos 2 columnas en pantallas medianas
+    }
+  }
+}
+
+@media (min-width: 960px) {
+  .formulario-container {
+    mat-form-field {
+      flex: 1 1 30%; // 3 columnas en pantallas grandes si cabe
+    }
+  }
+}
+
+
+
+

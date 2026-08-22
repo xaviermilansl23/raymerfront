@@ -1,0 +1,108 @@
+
+th {
+  background-color: #2e7d32 !important;
+  color: white !important;
+  font-weight: bold;
+  text-align: left;
+  padding: 12px;
+}
+
+
+.texto-rojo {
+  color: #d32f2f; // rojo fuerte
+  font-weight: bold;
+}
+
+.texto-verde {
+  color: #2e7d32; // verde oscuro
+  font-weight: bold;
+}
+
+
+.texto-negro {
+  color: #121212;
+  font-weight: bold;
+}
+
+
+
+
+.resumen-card {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+  background: #f1f8e9;
+  padding: 12px 20px;
+  border-left: 6px solid #33691e;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  width: fit-content;
+}
+
+.resumen-icon {
+  font-size: 25px;
+  color: #33691e;
+}
+
+.resumen-texto {
+  font-size: 16px;
+  color: #2e7d32;
+}
+
+/* Contenedor padre con flex horizontal y responsive */
+.resumen-contenedor {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.mini-resumen-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+  }
+}
+
+.mini-card {
+  display: flex;
+  align-items: center; // ✔️ centra ícono y texto verticalmente
+  background: #f1f8e9;
+  border-left: 6px solid #33691e;
+  padding: 10px 14px;
+  border-radius: 10px;
+  width: 220px;
+  height: 80px; // ✔️ altura suficiente para íconos
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.mini-icon {
+  font-size: 26px;   // ✔️ tamaño moderado que no se corta
+  color: #33691e;
+  flex-shrink: 0;    // ✔️ evita que se achique en pantallas pequeñas
+}
+
+.mini-texto-dos-lineas {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.mini-label {
+  font-size: 14px;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.mini-valor {
+  font-size: 16px;
+  font-weight: bold;
+}

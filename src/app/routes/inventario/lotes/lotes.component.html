@@ -1,0 +1,247 @@
+<mat-tab-group>
+
+  <!-- 🧾 TAB 1: Lotes con Precios -->
+  <mat-tab label="Lotes y Precios">
+    <div class="card-listado mat-elevation-z6">
+
+      <!-- 🔹 Encabezado -->
+      <div class="card-header">
+        <h2>Lotes de {{ nombreProducto }}</h2>
+      </div>
+
+      <!-- 🧮 Resumen Total + Último Lote -->
+<div class="mini-resumen-wrapper">
+
+  <!-- Total de Unidades -->
+  <div class="mini-card">
+    <mat-icon class="mini-icon">inventory_2</mat-icon>
+    <div class="mini-texto-dos-lineas">
+      <div class="mini-label">Total de Unidades</div>
+      <div class="mini-valor">{{ totalCantidadLotes }}</div>
+    </div>
+  </div>
+
+  <!-- Código de Barras -->
+  <div class="mini-card">
+    <mat-icon class="mini-icon">qr_code</mat-icon>
+    <div class="mini-texto-dos-lineas">
+      <div class="mini-label">Último Cód. Barras</div>
+      <div class="mini-valor">{{ ultimoLote?.codigo_barras || '—' }}</div>
+    </div>
+  </div>
+
+  <!-- Precio Compra -->
+  <div class="mini-card">
+    <mat-icon class="mini-icon">shopping_cart</mat-icon>
+    <div class="mini-texto-dos-lineas">
+      <div class="mini-label">Último Precio Compra</div>
+      <div class="mini-valor texto-rojo">Bs/ {{ ultimoLote?.precio_compra || '—' }}</div>
+    </div>
+  </div>
+
+  <!-- Precio Venta -->
+  <div class="mini-card">
+    <mat-icon class="mini-icon">price_check</mat-icon>
+    <div class="mini-texto-dos-lineas">
+      <div class="mini-label">Último Precio Venta</div>
+      <div class="mini-valor texto-verde">Bs/ {{ ultimoLote?.precio_venta || '—' }}</div>
+    </div>
+  </div>
+
+</div>
+<br>
+
+
+
+
+      <!-- 🔹 Barra de herramientas / filtros -->
+      <div class="card-toolbar">
+        <mat-form-field appearance="outline">
+          <mat-label>Buscar lote</mat-label>
+          <input matInput (keyup)="aplicarFiltro($event)" placeholder="Ingrese un dato">
+        </mat-form-field>
+
+        <button mat-button color="primary" (click)="abrirDialogLotes()" matTooltip="Crear nuevo lote" class="add-user-button">
+          <mat-icon>add</mat-icon> Crear Lote
+        </button>
+      </div>
+
+      <!-- 🔹 Tabla -->
+      <div class="tabla-scroll">
+
+        <table mat-table [dataSource]="dataSource" matSort class="mat-table full-width tabla-estilizada">
+
+          <ng-container matColumnDef="correlativo">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let lote; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="codigo_lote">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Código de Lote</th>
+            <td mat-cell *matCellDef="let lote">{{ lote.codigo_lote }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="codigo_barras">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Código de Barras</th>
+            <td mat-cell *matCellDef="let lote" >{{ lote.codigo_barras }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="precio_compra">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Precio Compra</th>
+            <td mat-cell *matCellDef="let lote" class="texto-rojo">Bs/ {{ lote.precio_compra }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="precio_venta">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Precio Venta</th>
+            <td mat-cell *matCellDef="let lote" class="texto-verde">Bs/ {{ lote.precio_venta }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="cantidad">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock Actual</th>
+            <td mat-cell *matCellDef="let lote" class="texto-negro">{{ lote.cantidad }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="fecha_ingreso">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Ingreso</th>
+            <td mat-cell *matCellDef="let lote">{{ lote.fecha_ingreso | date:'dd/MM/yy' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="fecha_vencimiento">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha de modificacion</th>
+            <td mat-cell *matCellDef="let lote">{{ lote.fecha_vencimiento | date:'dd/MM/yy' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let lote">
+              <button mat-icon-button color="primary" (click)="abrirDialogEditarLote(lote)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="abrirDialogConfirmacion(lote)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+          <tr *ngIf="dataSource.data.length === 0">
+            <td colspan="8" class="no-data-message">No hay lotes asociados a este producto.</td>
+          </tr>
+        </table>
+      </div>
+
+
+      <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+    </div>
+  </mat-tab>
+
+  <!-- 📦 TAB 2: Stock Inicial -->
+ <mat-tab label="Stock Inicial">
+  <div class="card-listado mat-elevation-z6">
+    <div class="card-header">
+      <h2>Stock Inicial de {{ nombreProducto }}</h2>
+    </div>
+
+    <!-- 🔍 Filtros -->
+    <div class="card-toolbar">
+
+      <!-- Estado -->
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select [(value)]="filtroEstado">
+          <mat-option value="">Todos</mat-option>
+          <mat-option value="A">Activos</mat-option>
+          <mat-option value="I">Inactivos</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Fecha Inicio -->
+      <mat-form-field appearance="outline">
+        <mat-label>Desde</mat-label>
+        <input matInput [matDatepicker]="pickerInicio" [(ngModel)]="filtroFechaInicio">
+        <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+        <mat-datepicker #pickerInicio></mat-datepicker>
+      </mat-form-field>
+
+      <!-- Fecha Fin -->
+      <mat-form-field appearance="outline">
+        <mat-label>Hasta</mat-label>
+        <input matInput [matDatepicker]="pickerFin" [(ngModel)]="filtroFechaFin">
+        <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+        <mat-datepicker #pickerFin></mat-datepicker>
+      </mat-form-field>
+
+    </div>
+
+
+    <!-- 🔎 Buscador -->
+    <div class="card-toolbar">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Buscar en stock</mat-label>
+        <input matInput (keyup)="aplicarFiltroStock($event)" placeholder="Buscar por texto">
+      </mat-form-field>
+    </div>
+         <button mat-raised-button color="primary" (click)="aplicarFiltrosStock()">
+        <mat-icon>filter_alt</mat-icon> Aplicar Filtros
+      </button>
+      <button mat-raised-button color="warn" (click)="limpiarFiltrosStock()">
+  <mat-icon>clear</mat-icon> Limpiar Filtros
+</button>
+
+    <!-- 📦 Tabla -->
+      <div class="tabla-scroll">
+      <table mat-table [dataSource]="stockDataSource" matSort class="mat-table full-width tabla-estilizada">
+
+        <!-- Columnas -->
+        <ng-container matColumnDef="correlativo">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let lote; let i = index">{{ i + 1 }}</td>
+          </ng-container>
+
+        <ng-container matColumnDef="producto">
+          <th mat-header-cell *matHeaderCellDef>Producto</th>
+          <td mat-cell *matCellDef="let row">{{ row.producto }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="codigo_barras">
+          <th mat-header-cell *matHeaderCellDef>Código de Barras</th>
+          <td mat-cell *matCellDef="let row">{{ row.codigo_barras }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="stock_inicial">
+          <th mat-header-cell *matHeaderCellDef>Stock Inicial</th>
+          <td mat-cell *matCellDef="let row" class="texto-verde">{{ row.stock_inicial }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="cantidad">
+          <th mat-header-cell *matHeaderCellDef>Stock Actual</th>
+          <td mat-cell *matCellDef="let row" class="texto-negro">{{ row.cantidad }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="fecha_ingreso">
+          <th mat-header-cell *matHeaderCellDef>Fecha Ingreso</th>
+          <td mat-cell *matCellDef="let row">{{ row.fecha_ingreso | date:'dd/MM/yy HH:mm' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef>Estado</th>
+          <td mat-cell *matCellDef="let row">{{ row.estado }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="stockDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: stockDisplayedColumns;"></tr>
+
+        <tr *ngIf="stockDataSource.data.length === 0">
+          <td colspan="7" class="no-data-message">No hay datos de stock para este producto.</td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+  </div>
+</mat-tab>
+
+
+</mat-tab-group>

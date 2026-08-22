@@ -1,0 +1,8 @@
+<h2 mat-dialog-title>Eliminar Producto</h2>
+<mat-dialog-content>
+  <p>¿Estás seguro de que deseas eliminar este producto?</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button #confirmButton mat-raised-button color="warn" (click)="eliminar()">Eliminar</button>
+</mat-dialog-actions>

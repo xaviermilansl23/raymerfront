@@ -1,0 +1,177 @@
+<button mat-fab color="primary"
+        *ngIf="esMovil"
+        style="position: fixed;
+         bottom: 20px; right:
+          20px; z-index: 1000;
+          background: #000000;
+           border-radius: 50%;
+           box-shadow: 0 4px 8px rgba(0,0,0,0.3);"
+        (click)="sideNav.toggle()">
+  <mat-icon style="color: white;">shopping_cart</mat-icon>
+</button>
+
+<mat-sidenav-container>
+  <!-- 🔹 Panel lateral fijo para la venta -->
+  <mat-sidenav
+    #sideNav
+    [mode]="modoSidenav"
+    [opened]="!esMovil"
+    position="end"
+    class="sidenav"
+    fxLayout="column">
+
+    <!-- Contenido del carrito -->
+    <div class="panel-content">
+      <h2>Carrito de Compras</h2>
+      <button mat-raised-button color="accent" (click)="iniciarVenta()" [disabled]="ventaId !== null">
+        Iniciar Venta
+      </button>
+
+      <div *ngIf="ventaId !== null && carrito.length === 0" class="carrito-vacio">
+        🛒 Carrito vacío
+      </div>
+
+      <ul *ngIf="carrito.length > 0" class="carrito-list">
+        <li *ngFor="let item of carrito.slice().reverse()" class="carrito-item">
+          <img [src]="item.imagen_url" alt="{{ item.nombre }}" class="carrito-img">
+          <div class="carrito-info">
+            <h4>{{ item.nombre }}</h4>
+            <p>Precio Unitario: Bs. {{ item.precio_fifo }}</p>
+            <p>Cantidad: {{ item.cantidad }}</p>
+            <p>Subtotal: Bs. {{ (item.cantidad * (item.precio_fifo || 0)) | number:'1.2-2' }}</p>
+          </div>
+          <button mat-icon-button color="warn" (click)="restarDelCarrito(item)">
+            <mat-icon>remove_circle</mat-icon>
+          </button>
+        </li>
+      </ul>
+
+      <div class="total-container">
+        <h3>Total: Bs. {{ calcularTotal() | number:'1.2-2' }}</h3>
+      </div>
+
+      <p *ngIf="ventaId">Venta iniciada</p>
+
+      <!-- Botón para abrir el panel de pago -->
+      <button mat-raised-button color="primary"
+              (click)="abrirPago()"
+              [disabled]="carrito.length === 0 || !ventaId">
+        Cobrar
+      </button>
+
+
+    </div>
+
+
+
+    <!-- 🔹 Backdrop del overlay de pago -->
+    <div class="overlay-backdrop"
+         *ngIf="pagoAbierto"
+         (click)="cerrarPago()"></div>
+
+    <!-- 🔹 Panel overlay de pago -->
+<aside class="overlay-panel"
+       *ngIf="pagoAbierto"
+       [@slideOverlay]="'open'">
+
+  <div class="panel-content">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+      <h2>Metodos de Pago</h2>
+      <button mat-icon-button color="warn" (click)="cerrarPago()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- Resumen -->
+    <div class="pago-resumen">
+      <div><strong>Total:</strong> Bs. {{ calcularTotal() | number:'1.2-2' }}</div>
+    </div>
+
+    <!-- Métodos de pago -->
+    <div class="metodos-grid">
+      <button class="metodo-card"
+              *ngFor="let m of metodosPago"
+              [class.active]="metodoSeleccionado?.id === m.id"
+              (click)="seleccionarMetodo(m)">
+        <div class="metodo-icon">
+          <mat-icon *ngIf="m.nombre==='EFECTIVO'">payments</mat-icon>
+          <mat-icon *ngIf="m.nombre==='TARJETA'">credit_card</mat-icon>
+          <mat-icon *ngIf="m.nombre==='QR'">qr_code_2</mat-icon>
+          <mat-icon *ngIf="m.nombre==='TRANSFERENCIA'">account_balance</mat-icon>
+          <mat-icon *ngIf="m.nombre==='OTRO'">more_horiz</mat-icon>
+        </div>
+        <div class="metodo-nombre">{{ m.nombre }}</div>
+      </button>
+    </div>
+
+
+
+
+ <!-- Acciones -->
+<div class="acciones-pago">
+  <!-- Registrar pago + Confirmar -->
+  <button mat-raised-button color="primary"
+          (click)="registrarPagoYConfirmar()"
+          [disabled]="!pagoPayloadPreview || isRegistrandoPago || isConfirmandoVenta">
+    {{ (isRegistrandoPago || isConfirmandoVenta) ? 'Procesando…' : 'Registrar pago y confirmar' }}
+  </button>
+
+</div>
+
+  </div>
+</aside>
+
+  </mat-sidenav>
+
+  <!-- 🔸 Contenido principal -->
+  <mat-sidenav-content resize>
+    <div class="content" fxLayout="column" fxFlex>
+      <div class="card-listado">
+        <div class="card-header">
+          <h2>Listado de Productos para la Venta</h2>
+        </div>
+
+        <div fxLayout="row wrap" fxLayoutGap="16px">
+          <!-- 🔹 Filtro por Nombre -->
+          <mat-form-field appearance="outline" fxFlex.xs="100%" fxFlex.sm="48%" fxFlex.gt-sm="30%">
+            <mat-label>Buscar Producto</mat-label>
+            <input matInput [(ngModel)]="filtroNombre" (input)="filtrarProductos()" placeholder="Ingrese el nombre">
+          </mat-form-field>
+
+          <!-- 🔹 Filtro por Categoría -->
+          <mat-form-field appearance="outline" fxFlex.xs="100%" fxFlex.sm="48%" fxFlex.gt-sm="30%">
+            <mat-label>Filtrar por Categoría</mat-label>
+            <mat-select [(ngModel)]="tipoSeleccionado" (selectionChange)="filtrarProductos()">
+              <mat-option *ngFor="let tipo of tiposProducto" [value]="tipo.tipo_producto_id">
+                {{ tipo.nombre }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- 🔹 Botón Limpiar Filtros -->
+          <div fxFlex.xs="100%" fxFlex.sm="48%" fxFlex.gt-sm="30%">
+            <button mat-raised-button color="warn" (click)="limpiarFiltros()">
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
+
+        <!-- 🔹 Contenedor de productos con scroll -->
+        <div class="product-grid-container">
+          <div class="product-grid">
+            <div class="product-card"
+                 *ngFor="let producto of productosFiltrados"
+                 (click)="agregarAlCarrito(producto.producto_id)">
+              <img [src]="producto.imagen_url" alt="{{ producto.nombre }}" class="product-image" />
+              <h4 class="product-name">Bs: {{ producto.precio_fifo }}</h4>
+              <h3>{{ producto.nombre }}</h3>
+              <h4 class="product-name">
+                {{ producto.total_cantidad > 0 ? producto.total_cantidad + ' DISPONIBLES' : 'Sin stock' }}
+              </h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

@@ -1,0 +1,107 @@
+/* ======== Estilo principal del contenedor ======== */
+.reporte-container {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ======== Título ======== */
+.reporte-container h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  background-color: #000;
+  color: #fff;
+  padding: 14px 20px;
+  border-radius: 10px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* ======== Información del sistema ======== */
+.info-sistema {
+  background: #f5f7fa;
+  border-left: 5px solid #1976d2;
+  padding: 16px 20px;
+  border-radius: 8px;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.info-sistema p {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+/* ======== Inputs y formulario ======== */
+mat-form-field {
+  width: 100%;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .input-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ======== Botón de acción ======== */
+button[mat-raised-button] {
+  background-color: #1976d2;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 20px;
+  box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+  transition: all 0.3s ease;
+}
+
+button[mat-raised-button]:hover {
+  background-color: #0d47a1;
+  box-shadow: 0 6px 10px rgba(13, 71, 161, 0.35);
+  transform: translateY(-1px);
+}
+
+button mat-icon {
+  margin-right: 6px;
+}
+
+/* ======== Mensajes y alertas ======== */
+.alert {
+  background-color: #fff8e1;
+  border-left: 5px solid #fbc02d;
+  padding: 10px 16px;
+  border-radius: 6px;
+  color: #7c6f05;
+  font-size: 0.9rem;
+}
+
+/* ======== Modo oscuro (si lo usas en global) ======== */
+:host-context(.dark-mode) .reporte-container {
+  background-color: #222;
+  color: #eee;
+}
+
+:host-context(.dark-mode) h1 {
+  background-color: #333;
+  color: #fff;
+}
+
+:host-context(.dark-mode) .info-sistema {
+  background: #2c2c2c;
+  color: #ddd;
+  border-left-color: #90caf9;
+}

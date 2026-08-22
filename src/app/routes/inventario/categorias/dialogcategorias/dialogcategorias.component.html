@@ -1,0 +1,36 @@
+<div class="formulario-container">
+  <form [formGroup]="formulario" (ngSubmit)="guardar()">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre" placeholder="Ingresa el nombre" />
+      <mat-error *ngIf="formulario.get('nombre')?.hasError('required')">
+        El nombre es obligatorio
+      </mat-error>
+    </mat-form-field>
+
+    <div class="button-group">
+      <!-- Botón de Guardar o Actualizar -->
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="formulario.invalid"
+        class="button-spacing"
+      >
+        {{ isEditMode ? 'Actualizar' : 'Guardar' }}
+      </button>
+      <h1></h1>
+      <!-- Botón de Eliminar visible solo en modo edición -->
+      <button
+        *ngIf="isEditMode"
+        mat-raised-button
+        color="warn"
+        type="button"
+        class="button-spacing"
+        (click)="confirmarEliminacion()"
+      >
+        Eliminar
+      </button>
+    </div>
+  </form>
+</div>

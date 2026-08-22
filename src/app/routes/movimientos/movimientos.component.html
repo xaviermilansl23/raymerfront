@@ -1,0 +1,172 @@
+<div class="card-listado">
+
+<div class="container">
+
+  <div class="card-header">
+    <h2>Listado de Movimientos - {{ vistaActual === 'ventas' ? 'VENTAS' : 'GASTOS' }}</h2>
+  </div>
+
+  <!-- 🔹 Filtros -->
+  <div class="filtros">
+    <mat-form-field appearance="outline">
+      <mat-label>Desde</mat-label>
+      <input matInput [matDatepicker]="picker1" [(ngModel)]="fechaInicio">
+      <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+      <mat-datepicker #picker1></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hasta</mat-label>
+      <input matInput [matDatepicker]="picker2" [(ngModel)]="fechaFin">
+      <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+      <mat-datepicker #picker2></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+  <mat-label>Métodos de pago</mat-label>
+  <mat-select multiple [(ngModel)]="metodosPagoSeleccionados">
+    <mat-option *ngFor="let m of metodosPagoCatalogo" [value]="m.id">
+      {{ m.nombre }}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
+
+    <button mat-raised-button color="primary" (click)="filtrarPorFechas()">Filtrar</button>
+    <button mat-raised-button color="warn" (click)="limpiarFiltros()">Limpiar filtros</button>
+  </div>
+
+  <!-- 🔹 Cards -->
+<div class="cards-container" *ngIf="datosCargados">
+  <mat-card class="card-balance">
+    <mat-card-title>💰 Balance Neto</mat-card-title>
+    <mat-card-content>Bs {{ balanceNeto | number:'1.2-2' }}</mat-card-content>
+  </mat-card>
+
+  <mat-card class="card-ventas">
+    <mat-card-title>🛒 Total Ventas</mat-card-title>
+    <mat-card-content>Bs {{ totalBalance | number:'1.2-2' }}</mat-card-content>
+  </mat-card>
+
+  <mat-card class="card-gastos">
+    <mat-card-title>💸 Total Gastos</mat-card-title>
+    <mat-card-content>Bs {{ totalGastosFiltrados | number:'1.2-2' }}</mat-card-content>
+  </mat-card>
+</div>
+
+
+  <!-- 🔹 Selector de vista -->
+  <div class="vista-selector">
+    <button mat-button [ngClass]="{ 'tab-activa': vistaActual === 'ventas' }" (click)="cambiarVista('ventas')">📈 Ventas</button>
+    <button mat-button [ngClass]="{ 'tab-activa': vistaActual === 'gastos' }" (click)="cambiarVista('gastos')">💸 Gastos</button>
+  </div>
+
+  <!-- 🔹 Agregar Gasto -->
+  <button *ngIf="vistaActual === 'gastos'" mat-raised-button color="accent" (click)="abrirDialogoCrearGasto()">
+    ➕ Agregar Gasto
+  </button>
+<div class="tabla-scroll">
+
+  <!-- 🔹 Tabla de Ventas -->
+  <table  *ngIf="vistaActual === 'ventas' && displayedColumns?.length" mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+    <ng-container matColumnDef="numero">
+      <th mat-header-cell *matHeaderCellDef> # </th>
+      <td mat-cell *matCellDef="let venta; let i = index"> {{ i + 1 }} </td>
+    </ng-container>
+
+      <ng-container matColumnDef="fecha">
+        <th mat-header-cell *matHeaderCellDef> Fecha y Hora </th>
+        <td mat-cell *matCellDef="let venta">
+           {{ venta.fecha_venta | date:'dd/MM/yy HH:mm' }}
+        </td>
+      </ng-container>
+
+
+    <ng-container matColumnDef="productos">
+      <th mat-header-cell *matHeaderCellDef> Productos Vendidos </th>
+      <td mat-cell *matCellDef="let venta"> {{ obtenerListaProductos(venta.productos) }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="montoTotal">
+      <th mat-header-cell *matHeaderCellDef> Monto Total </th>
+      <td mat-cell *matCellDef="let venta"> Bs {{ venta.monto_total }} </td>
+    </ng-container>
+
+          <ng-container matColumnDef="metodoPago">
+      <th mat-header-cell *matHeaderCellDef> Metodo Pago </th>
+      <td mat-cell *matCellDef="let venta">
+        <span >
+          {{ venta.metodo_pago }}
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="estado">
+      <th mat-header-cell *matHeaderCellDef> Estado </th>
+      <td mat-cell *matCellDef="let venta">
+        <span [ngClass]="{'anulada': venta.estado_venta === 'Anulada', 'activa': venta.estado_venta !== 'Anulada'}">
+          {{ venta.estado_venta }}
+        </span>
+      </td>
+    </ng-container>
+
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <!-- 🔹 Tabla de Gastos -->
+  <table *ngIf="vistaActual === 'gastos' && displayedColumnsGastos?.length" mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+    <ng-container matColumnDef="numero">
+      <th mat-header-cell *matHeaderCellDef> # </th>
+      <td mat-cell *matCellDef="let gasto; let i = index"> {{ i + 1 }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="fecha">
+      <th mat-header-cell *matHeaderCellDef> Fecha </th>
+      <td mat-cell *matCellDef="let gasto"> {{ gasto.fecha | date:'short' }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="nombre">
+      <th mat-header-cell *matHeaderCellDef> Nombre </th>
+      <td mat-cell *matCellDef="let gasto"> {{ gasto.nombre }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="descripcion">
+      <th mat-header-cell *matHeaderCellDef> Descripción </th>
+      <td mat-cell *matCellDef="let gasto"> {{ gasto.descripcion }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef> Total </th>
+      <td mat-cell *matCellDef="let gasto"> Bs {{ gasto.total }} </td>
+    </ng-container>
+
+    <ng-container matColumnDef="acciones">
+      <th mat-header-cell *matHeaderCellDef> Acciones </th>
+      <td mat-cell *matCellDef="let gasto">
+        <button mat-icon-button color="primary" (click)="abrirDialogoEditarGasto(gasto)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="abrirDialogoEliminarGasto(gasto)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumnsGastos"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumnsGastos;"></tr>
+  </table>
+</div>
+  <!-- 🔹 Paginador -->
+<mat-paginator
+  [length]="dataSource.filteredData.length || dataSource.data.length"
+  [pageSize]="20"
+  [pageSizeOptions]="[20, 50, 100, 150]"
+  showFirstLastButtons>
+</mat-paginator>
+
+</div>
+</div>

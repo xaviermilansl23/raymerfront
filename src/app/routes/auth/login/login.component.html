@@ -1,0 +1,47 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <div class="logo-container">
+      <img src="favicon.png" alt="Logo institucional" class="logo" />
+    </div>
+
+    <mat-card-title class="titulo">RAYMER S.R.L.</mat-card-title>
+
+    <mat-card-content>
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Usuario</mat-label>
+          <input
+            matInput
+            type="text"
+            name="usuario"
+            [(ngModel)]="usuario"
+            required
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            name="contrasena"
+            [(ngModel)]="contrasena"
+            required
+          />
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="!loginForm.valid"
+          class="login-button"
+        >
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <mat-error *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</mat-error>
+    </mat-card-content>
+  </mat-card>
+</div>

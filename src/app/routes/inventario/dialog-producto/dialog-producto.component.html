@@ -1,0 +1,85 @@
+<div class="dialog-producto-container">
+  <h2>{{ editMode ? 'Editar Producto' : 'Crear Producto' }}</h2>
+
+  <form [formGroup]="productoForm" (ngSubmit)="guardarProducto()">
+
+    <!-- Campo: Nombre -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre</mat-label>
+      <input
+        matInput
+        formControlName="nombre"
+        placeholder="Ingrese el nombre del producto"
+      />
+    </mat-form-field>
+
+    <!-- Campo: Descripción -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <textarea
+        matInput
+        formControlName="descripcion"
+        placeholder="Ingrese una descripción"
+      ></textarea>
+    </mat-form-field>
+
+    <!-- Selector: Tipo de Producto -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Tipo de Producto</mat-label>
+      <mat-select formControlName="tipoProductoId">
+        <mat-option *ngFor="let tipo of tiposProductos" [value]="tipo.tipo_producto_id">
+          {{ tipo.nombre }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- 🔥 NUEVO: URL Modelo 3D base -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>URL Modelo 3D (base)</mat-label>
+      <input
+        matInput
+        formControlName="modelo3dUrl"
+        placeholder="https://firebasestorage.googleapis.com/.../modelo.glb"
+      />
+    </mat-form-field>
+
+    <!-- 🔥 NUEVO: URL Modelo 3D completo -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>URL Modelo 3D (completo)</mat-label>
+      <input
+        matInput
+        formControlName="modelo3dFullUrl"
+        placeholder="https://firebasestorage.googleapis.com/.../modelo-full.glb"
+      />
+    </mat-form-field>
+
+    <!-- Campo: Imagen -->
+    <div class="image-upload full-width">
+      <button mat-raised-button color="accent" type="button" (click)="fileInput.click()">
+        Seleccionar Imagen
+      </button>
+
+      <input
+        type="file"
+        #fileInput
+        hidden
+        accept="image/*"
+        (change)="onFileSelected($event)"
+      />
+
+      <div *ngIf="imagenPrevia" class="image-preview-container">
+        <img [src]="imagenPrevia" alt="Vista previa" class="image-preview" />
+      </div>
+    </div>
+
+    <br />
+
+    <!-- Botones de acción -->
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="productoForm.invalid">
+        {{ editMode ? 'Actualizar Producto' : 'Guardar Producto' }}
+      </button>
+    </div>
+
+  </form>
+</div>
