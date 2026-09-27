@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { ConfirmacionDialgLotesComponent } from './confirmacion-dialg-lotes.component';
+import { dialogRefStub, matDialogDataStub } from '../../../services/test-stubs';
 
 describe('ConfirmacionDialgLotesComponent', () => {
   let component: ConfirmacionDialgLotesComponent;
@@ -8,7 +10,11 @@ describe('ConfirmacionDialgLotesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ConfirmacionDialgLotesComponent]
+      imports: [ConfirmacionDialgLotesComponent],
+      providers: [
+        { provide: MatDialogRef, useValue: dialogRefStub },
+        { provide: MAT_DIALOG_DATA, useValue: matDialogDataStub },
+      ],
     })
     .compileComponents();
 

@@ -1,23 +1,223 @@
 <div class="reporte-container">
-  <h1>📊 Reporte de Ventas del Sistema</h1>
-
-  <div class="info-sistema" *ngIf="infoSistema">
-    <p><strong>Nombre del Sistema:</strong> {{ infoSistema.nombre_sistema }}</p>
-    <p><strong>Versión:</strong> {{ infoSistema.version }}</p>
+  <div class="header-banner">
+    <div class="header-content">
+      <span class="header-icon-wrap">
+        <mat-icon class="header-icon">assessment</mat-icon>
+      </span>
+      <div>
+        <span class="header-kicker">Módulo de reportes</span>
+        <h1>Ventas por vendedor</h1>
+        <p class="header-subtitle">
+          Consulta un periodo y descarga un resumen PDF listo para revisar.
+        </p>
+      </div>
+    </div>
   </div>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Fecha inicio</mat-label>
-    <input matInput [(ngModel)]="fechaInicio" type="date" />
-  </mat-form-field>
+  <div *ngIf="cargandoInfo" class="cargando-info">
+    <mat-spinner diameter="28"></mat-spinner>
+    <span>Cargando información del sistema...</span>
+  </div>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Fecha fin</mat-label>
-    <input matInput [(ngModel)]="fechaFin" type="date" />
-  </mat-form-field>
+  <div *ngIf="errorInfo" class="cargando-info" role="status">
+    <span>No se pudo cargar la información de la empresa. Puedes configurar el reporte.</span>
+    <button mat-button type="button" (click)="cargarInfoSistema()">Reintentar</button>
+  </div>
 
-  <button mat-raised-button color="primary" (click)="generarReporte()">
-    <mat-icon>picture_as_pdf</mat-icon>
-    Generar Reporte PDF
-  </button>
+  <section
+    class="info-sistema"
+    *ngIf="!cargandoInfo && infoSistema.nombre_empresa"
+    aria-label="Información de la empresa"
+  >
+    <div class="info-principal">
+      <mat-icon>business</mat-icon>
+      <div>
+        <span class="info-label">Empresa</span>
+        <span class="info-value">{{ infoSistema.nombre_empresa }}</span>
+      </div>
+    </div>
+    <div class="info-contacto">
+      <span *ngIf="infoSistema.direccion_empresa">
+        <mat-icon>location_on</mat-icon>
+        {{ infoSistema.direccion_empresa }}
+      </span>
+      <span *ngIf="infoSistema.telefono_contacto">
+        <mat-icon>phone</mat-icon>
+        {{ infoSistema.telefono_contacto }}
+      </span>
+      <span *ngIf="infoSistema.correo_contacto">
+        <mat-icon>email</mat-icon>
+        {{ infoSistema.correo_contacto }}
+      </span>
+    </div>
+  </section>
+
+  <form class="formulario-card" [formGroup]="fechas" (ngSubmit)="generarReporte()" novalidate>
+    <div class="formulario-header">
+      <div>
+        <span class="paso">1</span>
+        <div>
+          <h2>Configura el reporte</h2>
+          <p>Elige el periodo y un usuario registrado en el sistema.</p>
+        </div>
+      </div>
+      <span class="fecha-limite">
+        <mat-icon>verified</mat-icon>
+        Datos desde 2022
+      </span>
+    </div>
+
+    <div class="formulario-body">
+      <div class="fechas-row">
+        <mat-form-field appearance="outline" class="fecha-field">
+          <mat-label>Desde</mat-label>
+          <input
+            matInput
+            formControlName="inicio"
+            placeholder="dd/mm/aaaa"
+            [matDatepicker]="pickerInicio"
+            [min]="fechaMinimaDate"
+            [max]="fechaInicioMaxDate"
+            required
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerInicio"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #pickerInicio></mat-datepicker>
+          <mat-hint>Mínimo: 01/01/2022</mat-hint>
+          <mat-error>Usa dd/mm/aaaa y una fecha válida dentro del rango.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="fecha-field">
+          <mat-label>Hasta</mat-label>
+          <input
+            matInput
+            formControlName="fin"
+            placeholder="dd/mm/aaaa"
+            [matDatepicker]="pickerFin"
+            [min]="fechaFinMinDate"
+            [max]="fechaMaximaDate"
+            required
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="pickerFin"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #pickerFin></mat-datepicker>
+          <mat-hint>Máximo: hoy</mat-hint>
+          <mat-error>Usa dd/mm/aaaa y una fecha válida dentro del rango.</mat-error>
+        </mat-form-field>
+      </div>
+
+      <div class="selector-bloque">
+        <div class="selector-titulo">
+          <div>
+            <span class="paso paso-secundario">2</span>
+            <div>
+              <h3>Busca al usuario</h3>
+              <p>
+                Escribe su nombre, usuario o CI y selecciona una sugerencia.
+              </p>
+            </div>
+          </div>
+          <span class="solo-uno">1 vendedor</span>
+        </div>
+
+        <mat-form-field appearance="outline" class="usuario-field">
+          <mat-label>Nombre, usuario o CI</mat-label>
+          <mat-icon matPrefix>person_search</mat-icon>
+          <input
+            matInput
+            type="text"
+            [formControl]="vendedorControl"
+            [matAutocomplete]="autoVendedores"
+            autocomplete="off"
+            maxlength="100"
+            aria-label="Buscar usuario registrado"
+          />
+          <mat-spinner
+            matSuffix
+            *ngIf="cargandoVendedores"
+            diameter="18"
+          ></mat-spinner>
+          <button
+            *ngIf="!cargandoVendedores && vendedorControl.value"
+            mat-icon-button
+            matSuffix
+            type="button"
+            aria-label="Limpiar vendedor"
+            (click)="limpiarVendedor($event)"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+          <mat-hint *ngIf="!errorVendedores">
+            Escribe al menos 2 caracteres. Se muestran hasta 15 usuarios registrados.
+          </mat-hint>
+          <mat-hint class="hint-error" *ngIf="errorVendedores">
+            No fue posible consultar los usuarios. Vuelve a escribir para reintentar.
+          </mat-hint>
+        </mat-form-field>
+
+        <mat-autocomplete
+          #autoVendedores="matAutocomplete"
+          [displayWith]="mostrarVendedor"
+          [autoActiveFirstOption]="true"
+          (optionSelected)="seleccionarVendedor($event)"
+        >
+          <mat-option
+            *ngFor="let vendedor of vendedoresSugeridos; trackBy: identificarUsuario"
+            [value]="vendedor"
+          >
+            <div class="usuario-option">
+              <div class="option-identidad">
+                <span class="option-nombre">{{ vendedor.nombre }}</span>
+                <span class="option-meta">
+                  {{ vendedor.usuario }}
+                  <ng-container *ngIf="vendedor.ci">
+                    · CI {{ vendedor.ci }}
+                  </ng-container>
+                </span>
+              </div>
+            </div>
+          </mat-option>
+
+          <mat-option
+            disabled
+            *ngIf="
+              !cargandoVendedores &&
+              !errorVendedores &&
+              busquedaTieneTexto &&
+              vendedoresSugeridos.length === 0
+            "
+          >
+            No se encontraron usuarios con ese nombre, usuario o CI.
+          </mat-option>
+        </mat-autocomplete>
+      </div>
+
+      <div class="accion-reporte">
+        <div class="accion-ayuda">
+          <mat-icon>info</mat-icon>
+          <span>
+            El PDF incluirá indicadores, detalle por venta y total del periodo.
+          </span>
+        </div>
+        <button
+          mat-raised-button
+          class="btn-generar"
+          type="submit"
+          [disabled]="!puedeGenerar"
+        >
+          <span class="btn-generar-icono">
+            <mat-icon *ngIf="!generandoReporte">picture_as_pdf</mat-icon>
+            <mat-spinner *ngIf="generandoReporte" diameter="20"></mat-spinner>
+          </span>
+          <span>{{
+            generandoReporte ? "Generando..." : "Generar reporte PDF"
+          }}</span>
+        </button>
+      </div>
+    </div>
+  </form>
 </div>

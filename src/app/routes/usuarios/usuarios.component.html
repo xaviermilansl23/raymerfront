@@ -1,3 +1,4 @@
+<header class="page-heading"><div><span class="eyebrow">Administración</span><h1>Usuarios y permisos</h1><p>Gestiona tu equipo y los roles de acceso al sistema.</p></div></header>
 <mat-tab-group>
 
   <!-- 🔹 Pestaña 1: Listado de Usuarios -->
@@ -14,7 +15,7 @@
           <input matInput (keyup)="applyFilter($event)" placeholder="Buscar usuarios">
         </mat-form-field>
 
-        <button mat-button (click)="openDialog()" matTooltip="Crear Usuario" class="add-user-button" >
+        <button mat-raised-button (click)="openDialog()" matTooltip="Crear Usuario" class="add-user-button" >
           <mat-icon>add</mat-icon> Agregar Usuario
         </button>
       </div>
@@ -96,6 +97,7 @@
         </mat-form-field>
       </div>
 
+      <div class="tabla-scroll">
       <table mat-table [dataSource]="dataSourceRoles" class="mat-table full-width">
 
         <!-- Índice -->
@@ -120,6 +122,7 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumnsRoles;"></tr>
       </table>
 
+      </div>
       <mat-paginator #paginatorRoles [pageSize]="10" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
     </div>
   </mat-tab>

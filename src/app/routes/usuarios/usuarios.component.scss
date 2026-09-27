@@ -1,8 +1,3 @@
-
-th {
-  background-color: #000000 !important;
-  color: white !important;
-  font-weight: bold;
-  text-align: left;
-  padding: 12px;
-}
+:host { display: block; }
+.card-listado { margin-bottom: 12px; }
+mat-tab-group { background: transparent; }

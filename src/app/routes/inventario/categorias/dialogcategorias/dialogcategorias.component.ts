@@ -65,7 +65,7 @@ export class DialogcategoriasComponent implements OnInit {
 
     const params = {
       nombre: this.formulario.value.nombre,
-      descripcion: 'descripcion igual', // Valor fijo
+      descripcion: this.producto?.descripcion || this.formulario.value.nombre || '',
     };
 
     if (this.isEditMode) {

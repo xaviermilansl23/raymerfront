@@ -1,73 +1,38 @@
-.header-card {
-  width: 100%;
-  padding: 2rem 3rem;
-  background-color: #000000; // Verde institucional
-  color: white;
-  border-bottom: 4px solid #000000;
-}
-
-.titulo {
-  font-size: 2rem;
-  margin: 0;
-}
-
-.subtitulo {
-  font-size: 1.1rem;
-  margin: 0;
-  opacity: 0.9;
-}
-
-.rol {
-  font-size: 0.95rem;
-}
-
-
-.contenedor-seccion {
-  padding: 0 2rem 2rem;
-  background-color: #f9f9f9;
-}
-
-
-// 🔹 Tarjetas de acceso
-.card-acceso {
-  width: 100%;
-  min-width: 220px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  background-color: #ffffff;
-  border-left: 6px solid #040404;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 180px;
-  text-align: center;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
-
-.icono {
-  font-size: 56px; // o 48px si prefieres
-  color: #000000;
-  margin-bottom: 1rem;
-  display: block;
-  height: auto;
-  width: auto;
-  line-height: 1; // 👈 importante
-  overflow: visible; // 👈 por si acaso
-}
-
-
-  h3 {
-    margin: 0.5rem 0 0;
-    font-size: 1.2rem;
-    color: #333;
-  }
-}
-
-
+:host { display: block; }
+.header-card { background: transparent; border: 0; box-shadow: none; padding: 0; margin-bottom: 30px; }
+.header-fila { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.titulo { font-size: clamp(24px, 2.5vw, 32px); font-weight: 400; line-height: 1.2; letter-spacing: -.9px; margin: 8px 0 10px; strong { font-weight: 700; } }
+.rol { font-size: 13px; color: var(--rm-muted); strong { font-weight: 400; } }
+.header-fecha { display: flex; align-items: center; gap: 8px; border: 1px solid var(--rm-border); background: #fff; border-radius: 8px; padding: 10px 12px; font-size: 11px; color: var(--rm-muted); mat-icon { width: 16px; height: 16px; font-size: 16px; } }
+.mensaje-bloqueo { display: flex; align-items: center; gap: 8px; margin-top: 20px; padding: 14px; background: #ffebee; color: var(--rm-red); border-radius: 8px; font-size: 13px; }
+.contenido-home { display: flex; flex-direction: column; gap: 28px; }
+.seccion-titulo { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; h2 { margin: 0; font-size: 16px; letter-spacing: -.3px; font-weight: 700; } }
+.titulo-icono { color: var(--rm-muted); display: flex; mat-icon { font-size: 19px; width: 19px; height: 19px; } &.dorado { color: #d97706; } }
+.chip-estado { display: flex; align-items: center; gap: 5px; margin-left: auto; font-size: 11px; color: var(--rm-green); mat-icon { width: 14px; height: 14px; font-size: 14px; } }
+.chip-error { padding: 7px 10px; border: 1px solid #ef9a9a; border-radius: 7px; background: #ffebee; color: var(--rm-red); cursor: pointer; }
+.chip-error:hover { background: #ffdfe3; }
+.tarjetas-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.tarjeta-resumen { position: relative; min-width: 0; padding: 22px 18px; border: 1px solid var(--rm-border); border-radius: 12px; background: #fff; }
+.tarjeta-icono { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; margin-bottom: 20px; mat-icon { width: 19px; height: 19px; font-size: 19px; } }
+.tarjeta-contenido { display: flex; flex-direction: column; gap: 10px; }
+.tarjeta-label { font-size: 11px; color: var(--rm-muted); }
+.tarjeta-monto { font-size: clamp(20px, 1.7vw, 27px); font-weight: 700; letter-spacing: -.8px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; line-height: 1.2; }
+.tarjeta-cantidad { color: var(--rm-muted); font-size: 11px; }
+.tarjeta-verde .tarjeta-icono { color: #2e7d32; background: #e8f5e9; }
+.tarjeta-azul .tarjeta-icono { color: #1565c0; background: #e8f1ff; }
+.tarjeta-purpura .tarjeta-icono { color: #7b1fa2; background: #f3e5f5; }
+.tarjeta-negra { background: #1a1a1a; color: #fff; border-color: #1a1a1a; .tarjeta-icono { background: #333; color: #fff; } .tarjeta-label, .tarjeta-cantidad { color: #b8bcc8; } &.balance-positivo .tarjeta-monto { color: #a5d6a7; } &.balance-negativo .tarjeta-monto { color: #ef9a9a; } }
+.home-bottom { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 24px; }
+.seccion-top, .seccion-accesos { background: #fff; border: 1px solid var(--rm-border); border-radius: 12px; padding: 24px; min-width: 0; }
+.section-description { margin: -10px 0 24px; font-size: 12px; color: var(--rm-muted); }
+.top-item { display: flex; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--rm-border); &:last-child { border: 0; } }
+.top-rank { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 7px; background: var(--rm-bg); color: var(--rm-muted); font-size: 11px; flex-shrink: 0; }
+.top-nombre { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-cantidad { color: var(--rm-muted); font-size: 11px; white-space: nowrap; }
+.top-total { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.top-vacio { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 220px; text-align: center; color: var(--rm-muted); font-size: 12px; mat-icon { width: 40px; height: 40px; font-size: 40px; color: #9ca3af; } }
+.accesos-lista { display: grid; gap: 8px; }
+.acceso { width: 100%; display: flex; align-items: center; gap: 12px; padding: 13px; border: 1px solid var(--rm-border); border-radius: 8px; background: #fff; text-align: left; font-size: 12px; color: var(--rm-ink); cursor: pointer; transition: border-color .15s, background .15s; mat-icon { color: var(--rm-muted); width: 18px; height: 18px; font-size: 18px; } .acceso-flecha { margin-left: auto; color: #9ca3af; } &:hover { border-color: #b8ccec; background: #fafbfc; } }
+@media (max-width: 1200px) { .tarjetas-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .home-bottom { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .tarjetas-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .tarjeta-resumen { padding: 18px 14px; } .tarjeta-negra { grid-column: 1 / -1; } .seccion-top, .seccion-accesos { padding: 20px 16px; } .top-item { flex-wrap: wrap; } .top-nombre { flex-basis: calc(100% - 40px); } .top-cantidad { margin-left: 40px; } .top-total { margin-left: auto; } }

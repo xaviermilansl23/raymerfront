@@ -16,10 +16,10 @@ import {
   ɵɵdefineNgModule,
   ɵɵinject
 } from "./chunk-LB7E77GG.js";
+import "./chunk-PEBH6BBU.js";
 import {
   NEVER
 } from "./chunk-WPM5VTLQ.js";
-import "./chunk-PEBH6BBU.js";
 import {
   Observable,
   Subject,

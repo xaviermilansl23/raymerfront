@@ -1,33 +1,133 @@
-<mat-card class="header-card mat-elevation-z3">
-  <div fxLayout="column" fxLayoutAlign="start start" fxLayoutGap="0.5rem">
-
-    <p class="titulo">USUARIO: <strong>{{nombreUsuario}}</strong>.</p>
-    <span class="rol">Rol: <strong>{{ rolesUsuario.join(', ') }}</strong></span>
-
-
-    <p class="mensaje-bloqueo" *ngIf="mensajeBloqueo">
-      <mat-icon color="warn" style="vertical-align: middle;">error_outline</mat-icon>
-      {{ mensajeBloqueo }}
-    </p>
+<mat-card class="header-card">
+  <div class="header-fila">
+    <div class="header-textos">
+      <span class="eyebrow">Vista general</span>
+      <h1 class="titulo">Bienvenido, <strong>{{ nombreUsuario }}</strong></h1>
+      <span class="rol">Rol: <strong>{{ rolesUsuario.join(', ') }}</strong></span>
+    </div>
+    <div class="header-fecha">
+      <mat-icon aria-hidden="false" aria-label="Fecha">today</mat-icon>
+      <span>{{ fechaHoy }}</span>
+    </div>
   </div>
+
+  <p class="mensaje-bloqueo" *ngIf="mensajeBloqueo">
+    <mat-icon color="warn">error_outline</mat-icon>
+    {{ mensajeBloqueo }}
+  </p>
 </mat-card>
-<br>
-<div class="contenedor-seccion" fxLayout="row wrap" fxLayoutGap="1rem" fxLayoutAlign="start start">
-  <!--<mat-card
-    class="card-acceso"
-    fxFlex.xs="100%"
-    fxFlex.sm="calc(50% - 0.5rem)"
-    fxFlex.md="calc(33.33% - 0.66rem)"
-    fxFlex.lg="calc(25% - 0.75rem)"
-    fxFlex.xl="calc(22% - 0.75rem)"
-    *ngFor="let item of accesosVisibles"
-    (click)="navegar(item.route)"
-    role="button"
-    tabindex="0"
-  >
-    <mat-icon class="icono">{{ item.icon }}</mat-icon>
-    <h3>{{ item.label }}</h3>
-  </mat-card>-->
+
+<div class="contenido-home">
+
+  <!-- RESUMEN DE VENTAS -->
+  <section class="seccion-resumen">
+    <header class="seccion-titulo">
+      <div class="titulo-icono">
+        <mat-icon>dashboard</mat-icon>
+      </div>
+      <h2>Resumen de Ventas</h2>
+      <span class="chip-estado" *ngIf="!resumenError">
+        <mat-icon>{{ resumenCargando ? 'sync' : 'verified' }}</mat-icon>
+        {{ resumenCargando ? 'Actualizando…' : 'Al día' }}
+      </span>
+      <button type="button" class="chip-estado chip-error" *ngIf="resumenError" (click)="cargarResumen()">
+        <mat-icon>refresh</mat-icon> No disponible · Reintentar
+      </button>
+    </header>
+
+    <div class="tarjetas-grid">
+
+      <!-- Ventas de Hoy -->
+      <div class="tarjeta-resumen tarjeta-verde">
+        <div class="tarjeta-icono">
+          <mat-icon>point_of_sale</mat-icon>
+        </div>
+        <div class="tarjeta-contenido">
+          <span class="tarjeta-label">Ventas Hoy</span>
+          <span class="tarjeta-monto">{{ formatearMoneda(ventasHoy.total) }}</span>
+          <span class="tarjeta-cantidad">{{ ventasHoy.cantidad }} transacciones</span>
+        </div>
+      </div>
+
+      <!-- Ventas de la Semana -->
+      <div class="tarjeta-resumen tarjeta-azul">
+        <div class="tarjeta-icono">
+          <mat-icon>date_range</mat-icon>
+        </div>
+        <div class="tarjeta-contenido">
+          <span class="tarjeta-label">Esta Semana</span>
+          <span class="tarjeta-monto">{{ formatearMoneda(ventasSemana.total) }}</span>
+          <span class="tarjeta-cantidad">{{ ventasSemana.cantidad }} transacciones</span>
+        </div>
+      </div>
+
+      <!-- Ventas del Mes -->
+      <div class="tarjeta-resumen tarjeta-purpura">
+        <div class="tarjeta-icono">
+          <mat-icon>calendar_month</mat-icon>
+        </div>
+        <div class="tarjeta-contenido">
+          <span class="tarjeta-label">Este Mes</span>
+          <span class="tarjeta-monto">{{ formatearMoneda(ventasMes.total) }}</span>
+          <span class="tarjeta-cantidad">{{ ventasMes.cantidad }} transacciones</span>
+        </div>
+      </div>
+
+      <!-- Balance Neto -->
+      <div class="tarjeta-resumen tarjeta-negra"
+           [ngClass]="{ 'balance-positivo': balanceNeto >= 0, 'balance-negativo': balanceNeto < 0 }">
+        <div class="tarjeta-icono">
+          <mat-icon>account_balance</mat-icon>
+        </div>
+        <div class="tarjeta-contenido">
+          <span class="tarjeta-label">Balance Neto Hoy</span>
+          <span class="tarjeta-monto">{{ formatearMoneda(balanceNeto) }}</span>
+          <span class="tarjeta-cantidad">Ventas - Gastos</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TOP PRODUCTOS DE HOY -->
+  <div class="home-bottom">
+  <section class="seccion-top">
+    <header class="seccion-titulo">
+      <div class="titulo-icono dorado">
+        <mat-icon>star</mat-icon>
+      </div>
+      <h2>Top Productos de Hoy</h2>
+    </header>
+
+    <p class="section-description">Los productos con mayor movimiento del día.</p>
+    <div class="top-productos-card">
+      <ng-container *ngIf="topProductos.length > 0; else topVacio">
+        <div class="top-lista">
+          <div class="top-item" *ngFor="let prod of topProductos; let i = index">
+            <span class="top-rank">{{ i + 1 }}</span>
+            <span class="top-nombre">{{ prod.producto }}</span>
+            <span class="top-cantidad">{{ prod.cantidad }} uds</span>
+            <span class="top-total">{{ formatearMoneda(prod.total) }}</span>
+          </div>
+        </div>
+      </ng-container>
+      <ng-template #topVacio>
+        <div class="top-vacio">
+          <mat-icon>query_stats</mat-icon>
+          <span>Sin ventas registradas hoy en el top.</span>
+        </div>
+      </ng-template>
+    </div>
+  </section>
+
+  <section class="seccion-accesos" *ngIf="accesosVisibles.length">
+    <header class="seccion-titulo"><h2>Accesos rápidos</h2></header>
+    <p class="section-description">Continúa con tu próxima tarea.</p>
+    <div class="accesos-lista">
+      <button type="button" class="acceso" *ngFor="let acceso of accesosVisibles" (click)="navegar(acceso.route)">
+        <mat-icon>{{ acceso.icon }}</mat-icon><span>{{ acceso.label }}</span><mat-icon class="acceso-flecha">arrow_forward</mat-icon>
+      </button>
+    </div>
+  </section>
+  </div>
 </div>
-
-

@@ -1,0 +1,31 @@
+<h2 mat-dialog-title>Filtrar por categoría</h2>
+<mat-dialog-content>
+  <p class="dialog-sub">Selecciona una o varias etiquetas para filtrar los productos.</p>
+
+  <div class="tag-list" *ngIf="data.tipos.length > 0">
+    <button
+      type="button"
+      class="tag"
+      [class.tag-active]="estaSeleccionado(tipo.tipo_producto_id)"
+      *ngFor="let tipo of data.tipos"
+      (click)="toggle(tipo.tipo_producto_id)"
+      [attr.aria-pressed]="estaSeleccionado(tipo.tipo_producto_id)"
+    >
+      <mat-icon *ngIf="estaSeleccionado(tipo.tipo_producto_id)">check</mat-icon>
+      <span>{{ tipo.tipo_producto_nombre }}</span>
+    </button>
+  </div>
+
+  <div class="dialog-vacio" *ngIf="data.tipos.length === 0">
+    <mat-icon>label_off</mat-icon>
+    <p>No hay categorías registradas.</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-stroked-button color="warn" (click)="limpiar()">Quitar filtro</button>
+  <button mat-raised-button color="primary" [disabled]="seleccion.size === 0" (click)="aplicar()">
+    Aplicar ({{ seleccion.size }})
+  </button>
+</mat-dialog-actions>

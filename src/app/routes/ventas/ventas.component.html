@@ -1,11 +1,6 @@
-<button mat-fab color="primary"
+<header class="page-heading"><div><span class="eyebrow">Punto de venta</span><h1>Nueva venta</h1><p>Selecciona productos y prepara el pedido de tu cliente.</p></div></header>
+<button mat-fab color="primary" aria-label="Abrir carrito" class="cart-mobile"
         *ngIf="esMovil"
-        style="position: fixed;
-         bottom: 20px; right:
-          20px; z-index: 1000;
-          background: #000000;
-           border-radius: 50%;
-           box-shadow: 0 4px 8px rgba(0,0,0,0.3);"
         (click)="sideNav.toggle()">
   <mat-icon style="color: white;">shopping_cart</mat-icon>
 </button>
@@ -22,14 +17,15 @@
 
     <!-- Contenido del carrito -->
     <div class="panel-content">
-      <h2>Carrito de Compras</h2>
-      <button mat-raised-button color="accent" (click)="iniciarVenta()" [disabled]="ventaId !== null">
-        Iniciar Venta
+      <div class="cart-heading"><div><span class="eyebrow">Pedido actual</span><h2>Carrito de compras</h2></div><button mat-icon-button *ngIf="esMovil" (click)="sideNav.close()" aria-label="Cerrar carrito"><mat-icon>close</mat-icon></button></div>
+      <button mat-raised-button color="accent" (click)="iniciarVenta()" [disabled]="ventaId !== null || ventaOcupada">
+        {{ isIniciandoVenta ? 'Iniciando…' : 'Iniciar Venta' }}
       </button>
 
       <div *ngIf="ventaId !== null && carrito.length === 0" class="carrito-vacio">
-        🛒 Carrito vacío
+        <mat-icon>shopping_bag</mat-icon><strong>Tu carrito está vacío</strong><span>Selecciona un producto para empezar.</span>
       </div>
+      <div *ngIf="ventaId === null && carrito.length === 0" class="carrito-vacio"><mat-icon>point_of_sale</mat-icon><strong>Todo listo para una nueva venta</strong><span>Presiona Iniciar venta para agregar productos.</span></div>
 
       <ul *ngIf="carrito.length > 0" class="carrito-list">
         <li *ngFor="let item of carrito.slice().reverse()" class="carrito-item">
@@ -40,25 +36,38 @@
             <p>Cantidad: {{ item.cantidad }}</p>
             <p>Subtotal: Bs. {{ (item.cantidad * (item.precio_fifo || 0)) | number:'1.2-2' }}</p>
           </div>
-          <button mat-icon-button color="warn" (click)="restarDelCarrito(item)">
+          <button mat-icon-button color="warn" (click)="restarDelCarrito(item)" [disabled]="carritoBloqueado" [attr.aria-label]="'Quitar una unidad de ' + item.nombre">
             <mat-icon>remove_circle</mat-icon>
           </button>
         </li>
       </ul>
 
       <div class="total-container">
-        <h3>Total: Bs. {{ calcularTotal() | number:'1.2-2' }}</h3>
+        <span>Total a cobrar</span><h3>Bs. {{ calcularTotal() | number:'1.2-2' }}</h3>
       </div>
 
-      <p *ngIf="ventaId">Venta iniciada</p>
+      <p class="sale-status" *ngIf="ventaId"><span></span> Venta iniciada</p>
 
       <!-- Botón para abrir el panel de pago -->
       <button mat-raised-button color="primary"
               (click)="abrirPago()"
-              [disabled]="carrito.length === 0 || !ventaId">
+              [disabled]="carrito.length === 0 || !ventaId || ventaOcupada">
         Cobrar
       </button>
 
+      <button mat-stroked-button color="warn" class="cancelar-venta"
+              *ngIf="ventaId !== null && !pagoRegistrado"
+              (click)="cancelarVenta()" [disabled]="ventaOcupada">
+        <mat-icon>close</mat-icon>
+        {{ isCancelandoVenta ? 'Cancelando…' : 'Cancelar venta' }}
+      </button>
+
+      <!-- Botón de facturación (venta avanzada completada) -->
+      <button mat-raised-button color="primary"
+              *ngIf="ventaCompletadaId !== null"
+              (click)="abrirFacturacion()">
+        <mat-icon>receipt_long</mat-icon>&nbsp;Facturación
+      </button>
 
     </div>
 
@@ -71,13 +80,12 @@
 
     <!-- 🔹 Panel overlay de pago -->
 <aside class="overlay-panel"
-       *ngIf="pagoAbierto"
-       [@slideOverlay]="'open'">
+       *ngIf="pagoAbierto">
 
   <div class="panel-content">
     <div style="display:flex; justify-content: space-between; align-items: center;">
       <h2>Metodos de Pago</h2>
-      <button mat-icon-button color="warn" (click)="cerrarPago()">
+      <button mat-icon-button color="warn" (click)="cerrarPago()" [disabled]="ventaOcupada" aria-label="Cerrar métodos de pago">
         <mat-icon>close</mat-icon>
       </button>
     </div>
@@ -92,6 +100,8 @@
       <button class="metodo-card"
               *ngFor="let m of metodosPago"
               [class.active]="metodoSeleccionado?.id === m.id"
+              [attr.aria-pressed]="metodoSeleccionado?.id === m.id"
+              [disabled]="ventaOcupada || pagoRegistrado"
               (click)="seleccionarMetodo(m)">
         <div class="metodo-icon">
           <mat-icon *ngIf="m.nombre==='EFECTIVO'">payments</mat-icon>
@@ -112,11 +122,82 @@
   <!-- Registrar pago + Confirmar -->
   <button mat-raised-button color="primary"
           (click)="registrarPagoYConfirmar()"
-          [disabled]="!pagoPayloadPreview || isRegistrandoPago || isConfirmandoVenta">
-    {{ (isRegistrandoPago || isConfirmandoVenta) ? 'Procesando…' : 'Registrar pago y confirmar' }}
+          [disabled]="(!pagoPayloadPreview && !pagoRegistrado) || ventaOcupada">
+    {{ ventaOcupada ? 'Procesando…' : (pagoRegistrado ? 'Reintentar confirmación' : 'Registrar pago y confirmar') }}
+  </button>
+
+  <button mat-stroked-button color="warn" class="cancelar-venta" *ngIf="!pagoRegistrado"
+          (click)="cancelarVenta()" [disabled]="ventaOcupada">
+    {{ isCancelandoVenta ? 'Cancelando…' : 'Cancelar venta' }}
   </button>
 
 </div>
+
+  </div>
+</aside>
+
+  <!-- 🔹 Overlay de facturación -->
+  <div class="overlay-backdrop"
+       *ngIf="facturaAbierta"
+       (click)="cerrarFacturacion()"></div>
+
+<aside class="overlay-panel"
+       *ngIf="facturaAbierta">
+
+  <div class="panel-content">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+      <h2>Facturación</h2>
+      <button mat-icon-button color="warn" (click)="cerrarFacturacion()" aria-label="Cerrar facturación">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div class="factura-info-venta">
+      <div><strong>Venta Nº:</strong> {{ ventaCompletadaId }}</div>
+    </div>
+
+    <mat-form-field appearance="outline" class="factura-campo">
+      <mat-label>Razón Social (Nombre completo)</mat-label>
+      <input matInput
+             [(ngModel)]="razonSocial"
+             (input)="onBuscarClientes()"
+             placeholder="Ej. Juan Pérez"
+             autocomplete="off">
+      <mat-hint *ngIf="clienteSeleccionadoId">
+        Cliente registrado - código {{ clienteSeleccionadoId }}
+      </mat-hint>
+    </mat-form-field>
+
+    <!-- Clientes registrados que coinciden -->
+    <div class="sugerencias-clientes"
+         *ngIf="mostrarSugerencias && clientesSugeridos.length">
+      <button type="button"
+              class="sugerencia-item"
+              *ngFor="let c of clientesSugeridos"
+              (click)="seleccionarCliente(c)">
+        <span class="sugerencia-nombre">{{ c.nombre }}</span>
+        <span class="sugerencia-detalle">
+          Código {{ c.cliente_id }} · {{ c.correo || c.telefono || '' }}
+        </span>
+      </button>
+    </div>
+    <div class="sugerencias-vacio" *ngIf="buscandoClientes">Buscando clientes…</div>
+
+    <mat-form-field appearance="outline" class="factura-campo">
+      <mat-label>Cédula de Identidad (CI)</mat-label>
+      <input matInput
+             [(ngModel)]="ci"
+             placeholder="Ej. 11109981"
+             autocomplete="off">
+    </mat-form-field>
+
+    <div class="acciones-factura">
+      <button mat-raised-button color="primary"
+              (click)="generarFacturaPDF()"
+              [disabled]="generandoFactura || !ventaCompletadaId">
+        {{ generandoFactura ? 'Generando…' : 'Generar Factura PDF' }}
+      </button>
+    </div>
 
   </div>
 </aside>
@@ -126,51 +207,93 @@
   <!-- 🔸 Contenido principal -->
   <mat-sidenav-content resize>
     <div class="content" fxLayout="column" fxFlex>
-      <div class="card-listado">
-        <div class="card-header">
-          <h2>Listado de Productos para la Venta</h2>
+      <div class="card-listado catalogo-productos">
+        <div class="catalog-filters">
+          <!-- 🔹 Filtro por Nombre -->
+          <mat-form-field appearance="outline">
+            <mat-icon matPrefix>search</mat-icon>
+            <mat-label>Buscar por nombre, marca o modelo</mat-label>
+            <input matInput [(ngModel)]="filtroNombre" (input)="filtrarProductos()">
+          </mat-form-field>
+
+          <button mat-stroked-button class="btn-filtros" (click)="abrirFiltros()"
+                  matTooltip="Seleccionar categorías">
+            <mat-icon>filter_list</mat-icon>
+            <span>Filtros</span>
+            <span class="filtro-count" *ngIf="categoriasSeleccionadas.length > 0">{{ categoriasSeleccionadas.length }}</span>
+          </button>
+          <button mat-stroked-button color="warn" class="btn-limpiar"
+                  *ngIf="filtrosActivos" (click)="limpiarFiltros()">
+            <mat-icon>clear</mat-icon> Limpiar Filtros
+          </button>
         </div>
 
-        <div fxLayout="row wrap" fxLayoutGap="16px">
-          <!-- 🔹 Filtro por Nombre -->
-          <mat-form-field appearance="outline" fxFlex.xs="100%" fxFlex.sm="48%" fxFlex.gt-sm="30%">
-            <mat-label>Buscar Producto</mat-label>
-            <input matInput [(ngModel)]="filtroNombre" (input)="filtrarProductos()" placeholder="Ingrese el nombre">
-          </mat-form-field>
-
-          <!-- 🔹 Filtro por Categoría -->
-          <mat-form-field appearance="outline" fxFlex.xs="100%" fxFlex.sm="48%" fxFlex.gt-sm="30%">
-            <mat-label>Filtrar por Categoría</mat-label>
-            <mat-select [(ngModel)]="tipoSeleccionado" (selectionChange)="filtrarProductos()">
-              <mat-option *ngFor="let tipo of tiposProducto" [value]="tipo.tipo_producto_id">
-                {{ tipo.nombre }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <!-- 🔹 Botón Limpiar Filtros -->
-          <div fxFlex.xs="100%" fxFlex.sm="48%" fxFlex.gt-sm="30%">
-            <button mat-raised-button color="warn" (click)="limpiarFiltros()">
-              Limpiar Filtros
+        <div class="tags-activos" *ngIf="categoriasSeleccionadas.length > 0">
+          <span class="tag-activo" *ngFor="let id of categoriasSeleccionadas">
+            <mat-icon>label</mat-icon>
+            <span class="tag-texto">{{ nombreCategoria(id) }}</span>
+            <button type="button" class="tag-quitar" (click)="alternarCategoria(id)"
+                    matTooltip="Quitar filtro"
+                    [attr.aria-label]="'Quitar filtro ' + nombreCategoria(id)">
+              <mat-icon>close</mat-icon>
             </button>
-          </div>
+          </span>
         </div>
 
         <!-- 🔹 Contenedor de productos con scroll -->
-        <div class="product-grid-container">
+        <div #catalogoScroll class="product-grid-container">
           <div class="product-grid">
             <div class="product-card"
-                 *ngFor="let producto of productosFiltrados"
+                 *ngFor="let producto of productosPagina; trackBy: trackById"
+                 role="button" tabindex="0" [attr.aria-label]="'Agregar ' + producto.nombre + ' al carrito'"
+                 [attr.aria-disabled]="carritoBloqueado || !ventaId || producto.total_cantidad <= 0"
+                 (keydown.enter)="agregarAlCarrito(producto.producto_id)"
+                 (keydown.space)="$event.preventDefault(); agregarAlCarrito(producto.producto_id)"
                  (click)="agregarAlCarrito(producto.producto_id)">
-              <img [src]="producto.imagen_url" alt="{{ producto.nombre }}" class="product-image" />
-              <h4 class="product-name">Bs: {{ producto.precio_fifo }}</h4>
-              <h3>{{ producto.nombre }}</h3>
-              <h4 class="product-name">
-                {{ producto.total_cantidad > 0 ? producto.total_cantidad + ' DISPONIBLES' : 'Sin stock' }}
-              </h4>
+              <div class="card-img-wrap" [class.sin-stock]="producto.total_cantidad <= 0">
+                <img [src]="producto.imagen_url" alt="{{ producto.nombre }}" class="product-image" loading="lazy" />
+                <span class="card-badge badge-zero" *ngIf="producto.total_cantidad <= 0">Sin stock</span>
+                <span class="card-badge badge-bajo" *ngIf="producto.total_cantidad > 0 && producto.total_cantidad <= 5">Stock bajo</span>
+              </div>
+              <span class="card-tipo" *ngIf="producto.tipo_producto_nombre">
+                <mat-icon>label</mat-icon> {{ producto.tipo_producto_nombre }}
+              </span>
+              <h3 class="product-name" [title]="producto.nombre">{{ producto.nombre }}</h3>
+              <span class="card-tipo" *ngIf="producto.marca || producto.modelo">
+                <mat-icon>sell</mat-icon>
+                {{ producto.marca || 'Sin marca' }}<ng-container *ngIf="producto.modelo"> · {{ producto.modelo }}</ng-container>
+              </span>
+              <p class="product-description">{{ producto.descripcion || 'Sin descripción' }}</p>
+              <div class="product-meta">
+                <div class="meta-precio">
+                  <span class="meta-label">Precio de venta</span>
+                  <span class="price">Bs {{ producto.precio_fifo | number:'1.2-2' }}</span>
+                </div>
+                <div class="stock-text" [class.stock-zero]="producto.total_cantidad <= 0">
+                  <mat-icon>{{ producto.total_cantidad > 0 ? 'inventory' : 'remove_circle' }}</mat-icon>
+                  {{ producto.total_cantidad }} unid.
+                </div>
+              </div>
+              <div class="stock-bar">
+                <div class="stock-bar-fill"
+                  [class.bajo]="producto.total_cantidad > 0 && producto.total_cantidad <= 5"
+                  [class.vacio]="producto.total_cantidad <= 0"
+                  [style.width.%]="stockPct(producto)"></div>
+              </div>
             </div>
           </div>
+          <div class="empty-state" *ngIf="productosFiltrados.length === 0"><mat-icon>search_off</mat-icon><h3>No hay productos en esta vista</h3><p>Prueba otro nombre o cambia la categoría.</p><button mat-stroked-button (click)="limpiarFiltros()">Limpiar filtros</button></div>
         </div>
+        <mat-paginator
+          class="catalog-pagination"
+          [length]="productosFiltrados.length"
+          [pageIndex]="paginaProductos"
+          [pageSize]="productosPorPagina"
+          [pageSizeOptions]="[10, 20, 30]"
+          showFirstLastButtons
+          (page)="cambiarPaginaProductos($event)"
+          aria-label="Paginación de productos para la venta">
+        </mat-paginator>
       </div>
     </div>
   </mat-sidenav-content>

@@ -1,9 +1,11 @@
-<h2 mat-dialog-title>{{ data?.usuario_id ? 'Actualizar Usuario' : 'Crear Usuario' }}</h2>
-<br>
+<div class="dialog-header">
+  <mat-icon>{{ data?.usuario_id ? 'edit' : 'person_add' }}</mat-icon>
+  <h2 mat-dialog-title>{{ data?.usuario_id ? 'Actualizar Usuario' : 'Crear Usuario' }}</h2>
+</div>
 
 <mat-dialog-content [formGroup]="formUsuario" class="formulario-container">
   <mat-form-field appearance="outline">
-    <mat-label>Nombre</mat-label>
+    <mat-label>Nombre Completo</mat-label>
     <input matInput formControlName="nombre" required />
   </mat-form-field>
 
@@ -12,22 +14,23 @@
     <input type="email" matInput formControlName="usuario" required />
   </mat-form-field>
 
-<div>
   <mat-form-field appearance="outline">
     <mat-label>Cedula de Identidad</mat-label>
     <input matInput formControlName="ci" required />
   </mat-form-field>
-</div>
 
   <mat-form-field appearance="outline">
     <mat-label>Contraseña</mat-label>
-    <input matInput type="password" formControlName="contrasena" required />
+    <input matInput type="password" formControlName="contrasena" [required]="!data?.usuario_id" />
+    <mat-hint *ngIf="!data?.usuario_id">Mínimo 8 caracteres, con mayúscula, minúscula y número</mat-hint>
+    <mat-hint *ngIf="data?.usuario_id">La contraseña se cambia desde el menú "Cambiar contraseña"</mat-hint>
   </mat-form-field>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Cancelar</button>
   <button mat-raised-button color="primary" (click)="guardarUsuario()" [disabled]="formUsuario.invalid">
+    <mat-icon>{{ data?.usuario_id ? 'save' : 'check' }}</mat-icon>
     {{ data?.usuario_id ? 'Actualizar' : 'Guardar' }}
   </button>
 </mat-dialog-actions>

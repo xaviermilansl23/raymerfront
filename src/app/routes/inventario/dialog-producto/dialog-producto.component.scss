@@ -1,9 +1,118 @@
-.image-preview {
-  width: 150px;  // Ancho fijo
-  height: 150px; // Alto fijo
-  object-fit: cover; // Ajusta la imagen sin deformarla
-  border-radius: 8px; // Bordes redondeados
-  display: block;
-  margin: 10px auto; // Centrar la imagen
-  border: 1px solid #ccc; // Borde opcional para destacar la imagen
+.dialog-producto-container {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px;
+
+  h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 16px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .image-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    padding: 16px;
+    background: #fafbfc;
+    border: 2px dashed #d0d0d0;
+    border-radius: 12px;
+  }
+
+  .image-preview-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .image-preview-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+    justify-items: center;
+  }
+
+  .image-preview-item {
+    position: relative;
+    width: 100%;
+    max-width: 150px;
+
+    .image-preview {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #e0e0e0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .remove-img {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      background: #f44336;
+      color: #fff;
+      border-radius: 50%;
+
+      ::ng-deep .mat-icon {
+        width: 16px;
+        height: 16px;
+        font-size: 16px;
+        line-height: 16px;
+      }
+    }
+  }
+
+  .image-preview {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+
+  .actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 520px) {
+    .field-row {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
 }

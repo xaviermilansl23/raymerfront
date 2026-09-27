@@ -1,0 +1,26 @@
+<div class="dialog-header">
+  <mat-icon>password</mat-icon>
+  <h2 mat-dialog-title>Cambiar Contraseña</h2>
+</div>
+
+<mat-dialog-content [formGroup]="formUsuario" class="formulario-container">
+  <mat-form-field appearance="outline">
+    <mat-label>Nueva contraseña</mat-label>
+    <input matInput type="password" formControlName="nuevaContrasena" required />
+    <mat-hint>Mínimo 8 caracteres, con mayúscula, minúscula y número</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Confirmar contraseña</mat-label>
+    <input matInput type="password" formControlName="confirmacion" required />
+    <mat-error *ngIf="formUsuario.hasError('noCoinciden')">Las contraseñas no coinciden</mat-error>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancelar</button>
+  <button mat-raised-button color="primary" (click)="guardar()" [disabled]="formUsuario.invalid">
+    <mat-icon>lock_reset</mat-icon>
+    Cambiar contraseña
+  </button>
+</mat-dialog-actions>

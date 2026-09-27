@@ -1,8 +1,7 @@
 <div class="dialog-producto-container">
-  <h2>{{ editMode ? 'Editar Producto' : 'Crear Producto' }}</h2>
+  <h2>{{ editMode ? "Editar Producto" : "Crear Producto" }}</h2>
 
   <form [formGroup]="productoForm" (ngSubmit)="guardarProducto()">
-
     <!-- Campo: Nombre -->
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Nombre</mat-label>
@@ -12,6 +11,28 @@
         placeholder="Ingrese el nombre del producto"
       />
     </mat-form-field>
+
+    <div class="field-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Marca</mat-label>
+        <input
+          matInput
+          formControlName="marca"
+          maxlength="100"
+          placeholder="Ej. Samsung"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Modelo</mat-label>
+        <input
+          matInput
+          formControlName="modelo"
+          maxlength="100"
+          placeholder="Ej. SM-A556E"
+        />
+      </mat-form-field>
+    </div>
 
     <!-- Campo: Descripción -->
     <mat-form-field appearance="outline" class="full-width">
@@ -27,7 +48,10 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Tipo de Producto</mat-label>
       <mat-select formControlName="tipoProductoId">
-        <mat-option *ngFor="let tipo of tiposProductos" [value]="tipo.tipo_producto_id">
+        <mat-option
+          *ngFor="let tipo of tiposProductos"
+          [value]="tipo.tipo_producto_id"
+        >
           {{ tipo.nombre }}
         </mat-option>
       </mat-select>
@@ -55,8 +79,13 @@
 
     <!-- Campo: Imagen -->
     <div class="image-upload full-width">
-      <button mat-raised-button color="accent" type="button" (click)="fileInput.click()">
-        Seleccionar Imagen
+      <button
+        mat-raised-button
+        color="accent"
+        type="button"
+        (click)="fileInput.click()"
+      >
+        Seleccionar Imágenes
       </button>
 
       <input
@@ -64,11 +93,47 @@
         #fileInput
         hidden
         accept="image/*"
+        multiple
         (change)="onFileSelected($event)"
       />
 
-      <div *ngIf="imagenPrevia" class="image-preview-container">
-        <img [src]="imagenPrevia" alt="Vista previa" class="image-preview" />
+      <div
+        *ngIf="imagenesExistentes.length > 0 || imagenesPrevia.length > 0"
+        class="image-preview-grid"
+      >
+        <!-- Imágenes ya existentes en el producto -->
+        <div
+          *ngFor="let img of imagenesExistentes; let i = index"
+          class="image-preview-item"
+        >
+          <img [src]="img" alt="Imagen existente" class="image-preview" />
+          <button
+            mat-icon-button
+            type="button"
+            class="remove-img"
+            (click)="eliminarExistente(i)"
+            aria-label="Quitar imagen"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Previews de archivos nuevos -->
+        <div
+          *ngFor="let img of imagenesPrevia; let i = index"
+          class="image-preview-item"
+        >
+          <img [src]="img" alt="Vista previa" class="image-preview" />
+          <button
+            mat-icon-button
+            type="button"
+            class="remove-img"
+            (click)="eliminarNueva(i)"
+            aria-label="Quitar imagen"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -76,10 +141,14 @@
 
     <!-- Botones de acción -->
     <div class="actions">
-      <button mat-raised-button color="primary" type="submit" [disabled]="productoForm.invalid">
-        {{ editMode ? 'Actualizar Producto' : 'Guardar Producto' }}
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="productoForm.invalid"
+      >
+        {{ editMode ? "Actualizar Producto" : "Guardar Producto" }}
       </button>
     </div>
-
   </form>
 </div>

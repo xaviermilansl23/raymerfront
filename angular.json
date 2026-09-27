@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "freshmarketfront": {
+    "raymer-frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/freshmarketfront",
+            "outputPath": "dist/raymer-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -34,8 +34,6 @@
             "styles": [
               "src/styles.scss",
               "node_modules/ngx-toastr/toastr.css"
-
-
             ],
             "scripts": [],
             "server": "src/main.server.ts",
@@ -49,17 +47,23 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2MB",
+                  "maximumWarning": "2.5MB",
                   "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "6kB",
+                  "maximumError": "10kB"
                 }
               ],
               "outputHashing": "all",
-              "serviceWorker": "ngsw-config.json"
+              "serviceWorker": "ngsw-config.json",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -73,10 +77,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "freshmarketfront:build:production"
+              "buildTarget": "raymer-frontend:build:production"
             },
             "development": {
-              "buildTarget": "freshmarketfront:build:development"
+              "buildTarget": "raymer-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -109,6 +113,6 @@
     }
   },
   "cli": {
-    "analytics": "e5570157-84df-4f0b-8c72-7db1541f7f2e"
+    "analytics": false
   }
 }

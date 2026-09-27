@@ -1,66 +1,60 @@
-<!-- ✅ Botón flotante para mostrar menú en móvil -->
-<button mat-icon-button
-        *ngIf="modoBarra === 'over'"
-        (click)="mainSidenav.toggle()"
-        style="position: fixed;
-               top: 16px;
-               right: 16px;
-               z-index: 2000;
-               background: #171717;
-               border-radius: 50%;
-               box-shadow: 0 4px 8px rgba(0,0,0,0.3);">
-  <mat-icon style="color: white;">menu</mat-icon>
-</button>
-
-
+<a class="skip-link" href="#main-content">Saltar al contenido</a>
 <mat-sidenav-container class="sidenav-container">
-  <!-- Solo visible en móvil -->
-  <mat-sidenav
-  #mainSidenav
-  class="sidenav"
-  fixedInViewport="true"
-  [mode]="modoBarra"
-  [opened]="abiertaBarra"
-  [ngClass]="{ 'collapsed': isCollapsed }"
-  position="start"
->
-<!-- Logo institucional -->
-<div class="logo-container" *ngIf="!isCollapsed">
-  <img src="favicon.png" alt="Logo" />
-  <span class="sistema-titulo"></span>
-</div>
-
-
-
-    <mat-nav-list>
-<!-- Solo mostrar el botón colapsar/expandir en escritorio -->
-<div class="toggle-button" *ngIf="modoBarra === 'side'" (click)="toggleSidenav()">
-  <mat-icon>{{ isCollapsed ? 'menu' : 'menu_open' }}</mat-icon>
-</div>
-
-      <ng-container *ngFor="let item of menuItems">
-
-        <ng-container *ngIf="puedeVer(item)">
-
-          <a mat-list-item [routerLink]="item.route">
-            <mat-icon>{{ item.icon }}</mat-icon>
-            <span class="menu-label" *ngIf="!isCollapsed">{{ item.label }}</span>
+  <mat-sidenav #mainSidenav class="sidenav" fixedInViewport="true" [mode]="modoBarra"
+    [opened]="abiertaBarra" [ngClass]="{ 'collapsed': isCollapsed }" position="start">
+    <div class="sidebar-layout">
+      <a class="sidebar-header" routerLink="/dashboard/home" aria-label="RAYMER, inicio">
+        <div class="logo-marca"><img src="favicon.png" alt="" /></div>
+        <div class="marca-texto" *ngIf="!isCollapsed">
+          <span class="marca-nombre">CORPRAYMER<span class="marca-srl"> S.R.L.</span></span>
+          <span class="marca-sub">Punto de venta</span>
+        </div>
+      </a>
+      <mat-nav-list class="sidebar-nav" aria-label="Navegación principal">
+        <span class="nav-seccion" *ngIf="!isCollapsed">Espacio de trabajo</span>
+        <ng-container *ngFor="let item of menuItems">
+          <a *ngIf="puedeVer(item)" mat-list-item class="nav-item" [class.smart-sales-nav]="item.route === '/dashboard/smart-sales'" [routerLink]="item.route"
+            routerLinkActive="activo" ariaCurrentWhenActive="page" [attr.aria-label]="item.label"
+            (click)="modoBarra === 'over' && mainSidenav.close()"
+            [matTooltip]="item.label" matTooltipPosition="after" [matTooltipDisabled]="!isCollapsed">
+            <span class="nav-inner"><mat-icon>{{ item.icon }}</mat-icon><span *ngIf="!isCollapsed">{{ item.label }}</span></span>
           </a>
         </ng-container>
-      </ng-container>
-
-      <mat-divider></mat-divider>
-
-      <a mat-list-item (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span class="menu-label" *ngIf="!isCollapsed">Cerrar sesión</span>
-      </a>
-    </mat-nav-list>
-  </mat-sidenav>
-
-  <mat-sidenav-content>
-    <div class="content">
-      <router-outlet></router-outlet>
+      </mat-nav-list>
+      <div class="sidebar-bottom">
+        <span class="nav-seccion" *ngIf="!isCollapsed">Mi cuenta</span>
+        <button type="button" class="account-action" (click)="cambiarContrasena()" aria-label="Cambiar contraseña"
+          matTooltip="Cambiar contraseña" matTooltipPosition="after" [matTooltipDisabled]="!isCollapsed">
+          <mat-icon>lock_outline</mat-icon><span *ngIf="!isCollapsed">Cambiar contraseña</span>
+        </button>
+        <button type="button" class="account-action nav-salir" (click)="logout()" aria-label="Cerrar sesión"
+          matTooltip="Cerrar sesión" matTooltipPosition="after" [matTooltipDisabled]="!isCollapsed">
+          <mat-icon>logout</mat-icon><span *ngIf="!isCollapsed">Cerrar sesión</span>
+        </button>
+        <div class="perfil-usuario">
+          <div class="avatar">{{ inicialesUsuario }}</div>
+          <div class="perfil-info" *ngIf="!isCollapsed">
+            <span class="perfil-nombre" [title]="nombreUsuario">{{ nombreUsuario }}</span>
+            <span class="perfil-rol">{{ rolesUsuario.join(', ') }}</span>
+          </div>
+        </div>
+        <button type="button" class="toggle-button" *ngIf="modoBarra === 'side'" (click)="toggleSidenav()"
+          [attr.aria-label]="isCollapsed ? 'Expandir menú' : 'Colapsar menú'" [attr.aria-expanded]="!isCollapsed">
+          <mat-icon>{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+          <span *ngIf="!isCollapsed">Colapsar menú</span>
+        </button>
+      </div>
     </div>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <header class="workspace-header">
+      <div class="workspace-context">
+        <button mat-icon-button *ngIf="modoBarra === 'over'" (click)="mainSidenav.toggle()"
+          aria-label="Abrir menú" [attr.aria-expanded]="mainSidenav.opened"><mat-icon>menu</mat-icon></button>
+        <span class="workspace-brand">RAYMER</span><span class="workspace-divider">/</span><span>Gestión comercial</span>
+      </div>
+      <div class="workspace-account"><mat-icon>account_circle</mat-icon><span>{{ nombreUsuario }}</span></div>
+    </header>
+    <main class="content" id="main-content" tabindex="-1"><router-outlet></router-outlet></main>
   </mat-sidenav-content>
 </mat-sidenav-container>

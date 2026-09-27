@@ -1,47 +1,30 @@
 <div class="login-container">
   <mat-card class="login-card">
-    <div class="logo-container">
-      <img src="favicon.png" alt="Logo institucional" class="logo" />
+    <div class="login-header">
+      <img src="favicon.png" alt="RAYMER" class="logo" />
+      <span class="eyebrow">GESTIÓN COMERCIAL</span>
+      <mat-card-title class="titulo">Inicia sesión</mat-card-title>
+      <p class="subtitulo">Ingresa tus credenciales para continuar.</p>
     </div>
-
-    <mat-card-title class="titulo">RAYMER S.R.L.</mat-card-title>
 
     <mat-card-content>
       <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Usuario</mat-label>
-          <input
-            matInput
-            type="text"
-            name="usuario"
-            [(ngModel)]="usuario"
-            required
-          />
+          <input matInput type="text" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" [(ngModel)]="usuario" required />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>Contraseña</mat-label>
-          <input
-            matInput
-            type="password"
-            name="contrasena"
-            [(ngModel)]="contrasena"
-            required
-          />
+          <input matInput type="password" name="contrasena" autocomplete="current-password" [(ngModel)]="contrasena" required />
         </mat-form-field>
 
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="!loginForm.valid"
-          class="login-button"
-        >
-          Iniciar Sesión
+        <div *ngIf="errorMessage" class="error-msg" role="alert">{{ errorMessage }}</div>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="!loginForm.valid || enviando" class="login-button">
+          {{ enviando ? 'Ingresando…' : 'Iniciar sesión' }}
         </button>
       </form>
-
-      <mat-error *ngIf="errorMessage" class="error-msg">{{ errorMessage }}</mat-error>
     </mat-card-content>
   </mat-card>
 </div>

@@ -1,7 +1,10 @@
-<h2 mat-dialog-title>Asignar Rol</h2>
+<div class="dialog-header">
+  <mat-icon>admin_panel_settings</mat-icon>
+  <h2 mat-dialog-title>Asignar Rol</h2>
+</div>
 
 <mat-dialog-content [formGroup]="formRol">
-  <mat-form-field appearance="fill" class="full-width">
+  <mat-form-field appearance="outline" class="full-width">
     <mat-label>Seleccione un rol</mat-label>
     <mat-select formControlName="rol_id" required>
       <mat-option *ngFor="let rol of listaRoles" [value]="rol.rol_id">
@@ -13,7 +16,8 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>
-  <button mat-flat-button color="primary" (click)="asignar()" [disabled]="formRol.invalid">
+  <button mat-raised-button color="primary" (click)="asignar()" [disabled]="formRol.invalid">
+    <mat-icon>assignment_ind</mat-icon>
     Asignar
   </button>
 </mat-dialog-actions>

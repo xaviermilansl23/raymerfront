@@ -1,52 +1,90 @@
 <mat-sidenav-container class="inventario-container">
   <!-- Panel lateral único -->
-<mat-sidenav #sideNav mode="over" position="end" class="sidenav" (closedStart)="handleSideNavClose()">
-    <div class="panel-content" [ngClass]="{'formulario-active': currentView === 'formulario'}">
+  <mat-sidenav
+    #sideNav
+    mode="over"
+    position="end"
+    class="sidenav"
+    (closedStart)="handleSideNavClose()"
+  >
+    <div class="sidenav-header">
+      <div class="sidenav-title">
+        <ng-container [ngSwitch]="currentView">
+          <h3 *ngSwitchCase="'categorias'">Tipos de Producto</h3>
+          <h3 *ngSwitchCase="'formulario'">
+            {{
+              selectedProduct
+                ? "Editar Tipo de Producto"
+                : "Nuevo Tipo de Producto"
+            }}
+          </h3>
+          <h3 *ngSwitchCase="'producto'">
+            {{ selectedProduct ? "Editar Producto" : "Nuevo Producto" }}
+          </h3>
+          <h3 *ngSwitchDefault>Detalles del Producto</h3>
+        </ng-container>
+      </div>
+      <button
+        mat-icon-button
+        (click)="sideNav.close()"
+        class="sidenav-close"
+        matTooltip="Cerrar panel"
+        aria-label="Cerrar panel"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <div
+      class="panel-content"
+      [ngClass]="{ 'formulario-active': currentView === 'formulario' }"
+    >
       <!-- Categorías -->
       <div class="categorias-view" *ngIf="currentView === 'categorias'">
-        <button mat-icon-button (click)="sideNav.close()" style="margin-bottom: 16px;">
-          <mat-icon>close</mat-icon>
-        </button>
         <app-categorias
-         (abrirFormulario)="openFormulario()"
-         (productoSeleccionado)="openFormulario($event)">
+          (abrirFormulario)="openFormulario()"
+          (productoSeleccionado)="openFormulario($event)"
+        >
         </app-categorias>
       </div>
 
-      <!-- Formulario -->
+      <!-- Formulario de tipo de producto -->
       <div class="formulario-view" *ngIf="currentView === 'formulario'">
-        <h3 *ngIf="!selectedProduct">Crear Nuevo Tipo de Producto</h3>
-        <h3 *ngIf="selectedProduct">Editar Tipo de Producto</h3>
         <app-dialogcategorias
-         [producto]="selectedProduct"
-         (closePanel)="ClosePanel()"></app-dialogcategorias>
-        <button mat-raised-button (click)="backToCategorias()">Volver a Categorías</button>
+          [producto]="selectedProduct"
+          (closePanel)="ClosePanel()"
+        ></app-dialogcategorias>
+        <button
+          mat-stroked-button
+          (click)="backToCategorias()"
+          class="btn-volver"
+        >
+          <mat-icon>arrow_back</mat-icon> Volver a Categorías
+        </button>
       </div>
 
-      <!-- Crear Producto -->
+      <!-- Formulario de producto -->
       <div class="producto-view" *ngIf="currentView === 'producto'">
-        <button mat-icon-button (click)="sideNav.close()" style="margin-bottom: 16px;">
-          <mat-icon>close</mat-icon>
-        </button>
         <app-dialog-producto
           *ngIf="currentView === 'producto'"
           [producto]="selectedProduct"
-          (closePanel)="handleClosePanel()">
+          (closePanel)="handleClosePanel()"
+        >
         </app-dialog-producto>
       </div>
 
       <!-- Detalle Producto -->
-      <div class="detalle-producto-view" *ngIf="currentView === 'detalle-producto'">
-        <button mat-icon-button (click)="sideNav.close()" style="margin-bottom: 16px;">
-          <mat-icon>close</mat-icon>
-        </button>
-        <h3>Detalles del Producto</h3>
+      <div
+        class="detalle-producto-view"
+        *ngIf="currentView === 'detalle-producto'"
+      >
         <app-detalle-producto
           *ngIf="currentView === 'detalle-producto'"
           [productoId]="selectedProductId!"
           (editar)="onEditarProducto($event)"
           (closePanel)="handleClosePanel()"
-          (eliminar)="handleClosePanel()">
+          (eliminar)="handleClosePanel()"
+        >
         </app-detalle-producto>
       </div>
     </div>
@@ -54,78 +92,255 @@
 
   <!-- Contenido principal -->
   <mat-sidenav-content>
-
     <div class="content">
-
-      <div class="card-listado mat-elevation-z6">
-        <div class="card-header">
-          <h2>Productos Disponibles</h2>
+      <!-- Cabecera del módulo -->
+      <div class="page-hero">
+        <div class="hero-text">
+          <span class="hero-eyebrow">Gestión de Stock</span>
+          <h1>Inventario</h1>
+          <p>Administra los productos disponibles y su stock en tiempo real.</p>
         </div>
+        <div class="hero-actions">
+          <button
+            mat-stroked-button
+            (click)="openCategorias()"
+            class="btn-hero-sec"
+          >
+            <mat-icon>category</mat-icon> Categorías
+          </button>
+          <button
+            mat-flat-button
+            (click)="openProductoFormulario()"
+            class="btn-hero-prim"
+          >
+            <mat-icon>add</mat-icon> Agregar Producto
+          </button>
+        </div>
+      </div>
 
+      <!-- Indicadores -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon stat-total">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value">{{ productos.length }}</div>
+            <div class="stat-label">Productos</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-stock">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value">{{ totalConStock }}</div>
+            <div class="stat-label">Con stock</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-zero">
+            <mat-icon>warning_amber</mat-icon>
+          </div>
+          <div class="stat-data">
+            <div class="stat-value">{{ totalSinStock }}</div>
+            <div class="stat-label">Sin stock</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-units"><mat-icon>layers</mat-icon></div>
+          <div class="stat-data">
+            <div class="stat-value">{{ unidadesTotales }}</div>
+            <div class="stat-label">Unidades disponibles</div>
+          </div>
+        </div>
+      </div>
 
+      <div #listadoProductos class="card-listado mat-elevation-z6 card-productos catalogo-productos">
+        <div class="listado-header">
+          <div>
+            <h2>Productos Disponibles</h2>
+            <span class="listado-count"
+              >{{ productosFiltrados.length }} de
+              {{ productos.length }} productos</span
+            >
+          </div>
+        </div>
 
         <!-- Filtros -->
         <div class="card-toolbar">
-          <mat-form-field appearance="outline">
-            <mat-label>Buscar por nombre</mat-label>
-            <input matInput [(ngModel)]="filtroNombre" (input)="aplicarFiltros()">
-          </mat-form-field>
+          <div class="filtros-izq">
+            <mat-form-field appearance="outline" class="field-buscar">
+              <mat-icon matIconPrefix>search</mat-icon>
+              <mat-label>Buscar por nombre, marca o modelo</mat-label>
+              <input
+                matInput
+                [(ngModel)]="filtroNombre"
+                (input)="aplicarFiltros()"
+              />
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Filtrar por tipo de producto</mat-label>
-            <mat-select [(ngModel)]="filtroTipoProducto" (selectionChange)="aplicarFiltros()">
-              <mat-option value="">Todos</mat-option>
-              <mat-option *ngFor="let tipo of tiposDeProductos" [value]="tipo.tipo_producto_id">
-                {{ tipo.tipo_producto_nombre }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+            <button
+              mat-stroked-button
+              class="btn-filtros"
+              (click)="abrirFiltros()"
+              matTooltip="Seleccionar categorías"
+            >
+              <mat-icon>filter_list</mat-icon>
+              <span>Filtros</span>
+              <span class="filtro-count" *ngIf="filtroTipos.length > 0">{{
+                filtroTipos.length
+              }}</span>
+            </button>
+          </div>
 
-          <button mat-raised-button color="warn" (click)="limpiarFiltros()">Limpiar Filtros</button>
-          <br>
-               <button mat-raised-button color="accent" (click)="openCategorias()">
-        Categorías
-      </button>
-      <button mat-raised-button color="accent" (click)="openProductoFormulario()">
-        Agregar Producto
-      </button>
+          <button
+            mat-stroked-button
+            color="warn"
+            (click)="limpiarFiltros()"
+            *ngIf="filtrosActivos"
+            class="btn-limpiar"
+          >
+            <mat-icon>clear</mat-icon> Limpiar Filtros
+          </button>
+        </div>
+
+        <!-- Etiquetas activas de categorías -->
+        <div class="tags-activos" *ngIf="filtroTipos.length > 0">
+          <span class="tag-activo" *ngFor="let id of filtroTipos">
+            <mat-icon>label</mat-icon>
+            <span class="tag-texto">{{ nombreTipo(id) }}</span>
+            <button
+              type="button"
+              class="tag-quitar"
+              (click)="quitarFiltroTipo(id)"
+              matTooltip="Quitar filtro"
+              [attr.aria-label]="'Quitar filtro ' + nombreTipo(id)"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </span>
         </div>
 
         <!-- Grid de productos -->
-        <!-- Grid de productos -->
-<div class="product-grid">
-  <div
-    class="product-card"
-    *ngFor="let producto of productosFiltrados"
-    (click)="openProductoDetalle(producto.producto_id)"
-    title="{{ producto.nombre }}"
-  >
-    <img
-      [src]="producto.imagen_url"
-      alt="{{ producto.nombre }}"
-      class="product-image"
-      loading="lazy"
-    />
+        <div
+          class="product-grid"
+          *ngIf="productosFiltrados.length > 0; else sinResultados"
+        >
+          <div
+            class="product-card"
+            role="button"
+            tabindex="0"
+            [attr.aria-label]="'Ver detalles de ' + producto.nombre"
+            *ngFor="let producto of productosPagina"
+            (click)="openProductoDetalle(producto.producto_id)"
+            (keydown.enter)="openProductoDetalle(producto.producto_id)"
+            (keydown.space)="
+              $event.preventDefault(); openProductoDetalle(producto.producto_id)
+            "
+            title="{{ producto.nombre }}"
+          >
+            <div
+              class="card-img-wrap"
+              [ngClass]="{ 'sin-stock': (producto.stock_disponible ?? 0) <= 0 }"
+            >
+              <img
+                [src]="producto.imagen_url"
+                alt="{{ producto.nombre }}"
+                class="product-image"
+                loading="lazy"
+              />
+              <span
+                class="card-badge badge-zero"
+                *ngIf="(producto.stock_disponible ?? 0) <= 0"
+                >Sin stock</span
+              >
+              <span
+                class="card-badge badge-bajo"
+                *ngIf="
+                  (producto.stock_disponible ?? 0) > 0 &&
+                  (producto.stock_disponible ?? 0) <= 5
+                "
+                >Stock bajo</span
+              >
+            </div>
 
-    <h3 class="product-name">{{ producto.nombre }}</h3>
+            <span class="card-tipo" *ngIf="producto.tipo_producto_nombre">
+              <mat-icon>label</mat-icon> {{ producto.tipo_producto_nombre }}
+            </span>
 
-    <!-- Descripción (máx 2 líneas) -->
-    <p class="product-desc">
-      {{ (producto.descripcion || 'Sin descripción disponible') }}
-    </p>
+            <h3 class="product-name">{{ producto.nombre }}</h3>
 
-    <!-- Precio FIFO y Stock -->
-    <div class="product-meta">
-      <span class="price">
-        Costo: Bs {{ producto.precio_fifo | number:'1.2-2' }}
-      </span>
-      <span class="stock" [ngClass]="{'stock-zero': (producto.stock_disponible || 0) <= 0}">
-        Stock: {{ producto.stock_disponible ?? 0 }}
-      </span>
-    </div>
-  </div>
-</div>
+            <span class="card-tipo" *ngIf="producto.marca || producto.modelo">
+              <mat-icon>sell</mat-icon>
+              {{ producto.marca || "Sin marca" }}
+              <ng-container *ngIf="producto.modelo">
+                · {{ producto.modelo }}</ng-container
+              >
+            </span>
 
+            <div class="product-meta">
+              <div class="meta-precio">
+                <span class="meta-label">Costo FIFO</span>
+                <span class="price"
+                  >Bs {{ producto.precio_fifo | number: "1.2-2" }}</span
+                >
+              </div>
+              <div class="meta-stock">
+                <div
+                  class="stock-text"
+                  [ngClass]="{
+                    'stock-zero': (producto.stock_disponible ?? 0) <= 0,
+                  }"
+                >
+                  <mat-icon>{{
+                    (producto.stock_disponible ?? 0) > 0
+                      ? "inventory"
+                      : "remove_circle"
+                  }}</mat-icon>
+                  {{ producto.stock_disponible ?? 0 }} unid.
+                </div>
+              </div>
+            </div>
+
+            <!-- Medidor de stock -->
+            <div class="stock-bar">
+              <div
+                class="stock-bar-fill"
+                [ngClass]="{
+                  bajo:
+                    (producto.stock_disponible ?? 0) > 0 &&
+                    (producto.stock_disponible ?? 0) <= 5,
+                  vacio: (producto.stock_disponible ?? 0) <= 0,
+                }"
+                [style.width.%]="stockPct(producto)"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <mat-paginator
+          class="catalog-pagination"
+          [length]="productosFiltrados.length"
+          [pageIndex]="paginaProductos"
+          [pageSize]="productosPorPagina"
+          [pageSizeOptions]="[10, 20, 30]"
+          showFirstLastButtons
+          (page)="cambiarPaginaProductos($event)"
+          aria-label="Paginación de productos del inventario">
+        </mat-paginator>
+
+        <!-- Sin resultados -->
+        <ng-template #sinResultados>
+          <div class="empty-state">
+            <mat-icon>search_off</mat-icon>
+            <h3>No se encontraron productos</h3>
+            <p>Intenta con otros criterios de búsqueda o limpia los filtros.</p>
+            <button mat-stroked-button (click)="limpiarFiltros()">
+              <mat-icon>clear</mat-icon> Limpiar filtros
+            </button>
+          </div>
+        </ng-template>
       </div>
     </div>
   </mat-sidenav-content>

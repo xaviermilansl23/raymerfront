@@ -108,8 +108,9 @@ export class AuthService {
 
     try {
       const payload = this.decodeToken(token);
+      if (!payload || typeof payload.exp !== 'number') return false;
       const now = Math.floor(Date.now() / 1000);
-      return payload.exp && payload.exp < now;
+      return payload.exp < now;
     } catch {
       return true;
     }
@@ -128,10 +129,17 @@ export class AuthService {
   }
 
   /**
-   * Decodifica el payload del token JWT
+   * Decodifica el payload del token JWT (maneja base64url y padding)
    */
   private decodeToken(token: string): any {
     const payload = token.split('.')[1];
-    return JSON.parse(atob(payload));
+    if (!payload) throw new Error('Token mal formado');
+
+    // base64url -> base64 y agrega padding si falta
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64.padEnd(Math.ceil(b64.length / 4) * 4, '=');
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
   }
 }

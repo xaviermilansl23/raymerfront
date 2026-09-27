@@ -1,6 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
 
 import { DialogcategoriasComponent } from './dialogcategorias.component';
+import { FreshService } from '../../../services/fresh.service';
+import { freshServiceStub, matDialogStub, toastrServiceStub } from '../../../services/test-stubs';
 
 describe('DialogcategoriasComponent', () => {
   let component: DialogcategoriasComponent;
@@ -8,7 +12,12 @@ describe('DialogcategoriasComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DialogcategoriasComponent]
+      imports: [DialogcategoriasComponent],
+      providers: [
+        { provide: FreshService, useValue: freshServiceStub() },
+        { provide: ToastrService, useValue: toastrServiceStub },
+        { provide: MatDialog, useValue: matDialogStub },
+      ],
     })
     .compileComponents();
 

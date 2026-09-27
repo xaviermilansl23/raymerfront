@@ -1,0 +1,5 @@
+:host { display: block; }
+.scanner-container { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+.scanner-header { text-align: center; padding: 20px 0; h2 { font-size: 28px; letter-spacing: -.8px; margin: 10px 0; } p { font-size: 13px; line-height: 1.7; color: var(--rm-muted); max-width: 380px; margin: auto; } }
+.scanner-frame { width: 100%; padding: 16px; background: #fff; border: 1px solid var(--rm-border); border-radius: 12px; overflow: hidden; }
+.scanner-note { display: flex; align-items: center; gap: 8px; justify-content: center; color: var(--rm-muted); font-size: 12px; text-align: center; line-height: 1.6; }

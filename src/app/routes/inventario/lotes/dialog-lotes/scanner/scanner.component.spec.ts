@@ -1,6 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
 
 import { ScannerComponent } from './scanner.component';
+import { ScannerSyncService } from './scanner-sync.service';
+import { dialogRefStub, toastrServiceStub } from '../../../../services/test-stubs';
 
 describe('ScannerComponent', () => {
   let component: ScannerComponent;
@@ -8,7 +12,12 @@ describe('ScannerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ScannerComponent]
+      imports: [ScannerComponent],
+      providers: [
+        { provide: ScannerSyncService },
+        { provide: MatDialogRef, useValue: dialogRefStub },
+        { provide: ToastrService, useValue: toastrServiceStub },
+      ],
     })
     .compileComponents();
 

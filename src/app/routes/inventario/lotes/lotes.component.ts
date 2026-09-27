@@ -1,4 +1,10 @@
-import { Component, OnInit, ViewChild, OnDestroy, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  OnDestroy,
+  AfterViewInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
@@ -17,6 +23,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { DialogLotesComponent } from './dialog-lotes/dialog-lotes.component';
 import { ConfirmacionDialgLotesComponent } from './confirmacion-dialg-lotes/confirmacion-dialg-lotes.component';
@@ -42,6 +49,7 @@ import { FreshService } from '../../services/fresh.service';
     MatSelectModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatTooltipModule,
   ],
   templateUrl: './lotes.component.html',
   styleUrls: ['./lotes.component.scss'],
@@ -55,6 +63,7 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = [
     'correlativo',
     'codigo_lote',
+    'proveedor',
     'codigo_barras',
     'precio_compra',
     'precio_venta',
@@ -69,6 +78,7 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
   stockDisplayedColumns: string[] = [
     'correlativo',
     'producto',
+    'proveedor',
     'codigo_barras',
     'stock_inicial',
     'cantidad',
@@ -94,7 +104,7 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
     private route: ActivatedRoute,
     private productosService: FreshService,
     private dialog: MatDialog,
-    private toastr: ToastrService
+    private toastr: ToastrService,
   ) {}
 
   ngOnInit(): void {
@@ -111,15 +121,18 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     // Predicados de filtro (incluye números/fechas como string)
-    this.dataSource.filterPredicate = (row, filter) => this.rowMatchesFilter(row, filter);
-    this.stockDataSource.filterPredicate = (row, filter) => this.rowMatchesFilter(row, filter);
+    this.dataSource.filterPredicate = (row, filter) =>
+      this.rowMatchesFilter(row, filter);
+    this.stockDataSource.filterPredicate = (row, filter) =>
+      this.rowMatchesFilter(row, filter);
   }
 
   ngAfterViewInit(): void {
     // Asignar paginator y sort una vez montados
     if (this.paginator) this.dataSource.paginator = this.paginator;
     if (this.sort) this.dataSource.sort = this.sort;
-    if (this.stockPaginator) this.stockDataSource.paginator = this.stockPaginator;
+    if (this.stockPaginator)
+      this.stockDataSource.paginator = this.stockPaginator;
   }
 
   ngOnDestroy(): void {
@@ -142,6 +155,7 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
       safe(row.codigo_lote) +
       safe(row.codigo_barras) +
       safe(row.producto) +
+      safe(row.proveedor_nombre) +
       safe(row.precio_compra) +
       safe(row.precio_venta) +
       safe(row.cantidad) +
@@ -194,7 +208,9 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
     const filtros: any = {
       productoId: this.productoId,
       estado: this.filtroEstado || null,
-      fechaInicio: this.filtroFechaInicio ? this.toISO(this.filtroFechaInicio) : null,
+      fechaInicio: this.filtroFechaInicio
+        ? this.toISO(this.filtroFechaInicio)
+        : null,
       fechaFin: this.filtroFechaFin ? this.toISO(this.filtroFechaFin) : null,
     };
 
@@ -202,7 +218,8 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (response: any) => {
         const rows = Array.isArray(response) ? response : [];
         this.stockDataSource.data = rows;
-        if (this.stockDataSource.paginator) this.stockDataSource.paginator.firstPage();
+        if (this.stockDataSource.paginator)
+          this.stockDataSource.paginator.firstPage();
       },
       error: (err) => console.error('Error al obtener el stock inicial:', err),
     });
@@ -217,7 +234,10 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get totalCantidadLotes(): number {
-    return this.dataSource.data.reduce((acc, l) => acc + (Number(l.cantidad) || 0), 0);
+    return this.dataSource.data.reduce(
+      (acc, l) => acc + (Number(l.cantidad) || 0),
+      0,
+    );
   }
 
   // ======= Filtros (tabla lotes) =======
@@ -233,7 +253,8 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
   aplicarFiltroStock(event: Event): void {
     const value = (event.target as HTMLInputElement).value || '';
     this.stockDataSource.filter = value.trim().toLowerCase();
-    if (this.stockDataSource.paginator) this.stockDataSource.paginator.firstPage();
+    if (this.stockDataSource.paginator)
+      this.stockDataSource.paginator.firstPage();
   }
 
   aplicarFiltrosStock(): void {
@@ -300,7 +321,8 @@ export class LotesComponent implements OnInit, AfterViewInit, OnDestroy {
         this.obtenerLotes();
         this.obtenerStockInicial();
       },
-      error: () => this.toastr.error('Hubo un error al eliminar el lote.', 'Error'),
+      error: () =>
+        this.toastr.error('Hubo un error al eliminar el lote.', 'Error'),
     });
   }
 }

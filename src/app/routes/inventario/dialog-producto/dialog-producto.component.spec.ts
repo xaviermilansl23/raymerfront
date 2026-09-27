@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ToastrService } from 'ngx-toastr';
 
 import { DialogProductoComponent } from './dialog-producto.component';
+import { FreshService } from '../../services/fresh.service';
+import { freshServiceStub, toastrServiceStub } from '../../services/test-stubs';
 
 describe('DialogProductoComponent', () => {
   let component: DialogProductoComponent;
@@ -8,7 +11,11 @@ describe('DialogProductoComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [DialogProductoComponent]
+      imports: [DialogProductoComponent],
+      providers: [
+        { provide: FreshService, useValue: freshServiceStub() },
+        { provide: ToastrService, useValue: toastrServiceStub },
+      ],
     })
     .compileComponents();
 

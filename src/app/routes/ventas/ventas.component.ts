@@ -1,5 +1,6 @@
 import {
   Component,
+  ElementRef,
   ViewChild,
   OnInit,
   OnDestroy,
@@ -12,22 +13,25 @@ import { MatSidenavContent, MatSidenavModule } from '@angular/material/sidenav';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { Observable, Subject } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
 import { FreshService } from '../services/fresh.service';
 import { ToastrService } from 'ngx-toastr';
 import { MatFormField } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatOptionModule } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { FiltrosProductoDialogComponent } from '../inventario/filtros-producto-dialog/filtros-producto-dialog.component';
+import { MatPaginatorIntl, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { crearPaginadorProductos } from '../../shared/productos-paginator';
 import { environment } from '../../../environments/environment';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { SocketService } from '../services/sockets.service';
-import { skip, takeUntil } from 'rxjs/operators';
+import { finalize, skip, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-ventas',
@@ -39,9 +43,10 @@ import { skip, takeUntil } from 'rxjs/operators';
     MatSidenavContent,
     MatToolbarModule,
     MatIconModule,
+    MatDialogModule,
+    MatTooltipModule,
+    MatPaginatorModule,
     MatFormField,
-    MatSelectModule,
-    MatOptionModule,
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -51,17 +56,41 @@ import { skip, takeUntil } from 'rxjs/operators';
   styleUrls: ['./ventas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  providers: [{ provide: MatPaginatorIntl, useFactory: crearPaginadorProductos }],
 })
 export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('sideNav') sideNav!: MatSidenav;
+  @ViewChild('catalogoScroll') catalogoScroll?: ElementRef<HTMLElement>;
 
   private destroy$ = new Subject<void>();
   private keydownHandler!: (e: KeyboardEvent) => void;
 
   productos: any[] = [];
   productosFiltrados: any[] = [];
+  paginaProductos = 0;
+  productosPorPagina = 30;
+
+  get productosPagina(): any[] {
+    const inicio = this.paginaProductos * this.productosPorPagina;
+    return this.productosFiltrados.slice(inicio, inicio + this.productosPorPagina);
+  }
+
+  cambiarPaginaProductos(event: PageEvent): void {
+    this.paginaProductos = event.pageIndex;
+    this.productosPorPagina = event.pageSize;
+    if (this.catalogoScroll) this.catalogoScroll.nativeElement.scrollTop = 0;
+    this.cdr.markForCheck();
+  }
+
+  stockPct(producto: any): number {
+    const stock = Number(producto.total_cantidad || 0);
+    const maxStock = this.productosFiltrados.reduce(
+      (max, p) => Math.max(max, Number(p.total_cantidad || 0)), 0,
+    );
+    return stock > 0 && maxStock > 0 ? Math.max(6, (stock / maxStock) * 100) : 0;
+  }
   tiposProducto: any[] = [];
-  tipoSeleccionado: number | null = null;
+  categoriasSeleccionadas: number[] = [];
   filtroNombre: string = '';
 
   carrito: any[] = [];
@@ -82,6 +111,33 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   isRegistrandoPago = false;
   isConfirmandoVenta = false;
   productosProcesados = false;
+  isIniciandoVenta = false;
+  isCancelandoVenta = false;
+  productosPendientes = 0;
+  pagoRegistrado = false;
+  cargandoCatalogo = false;
+
+  get ventaOcupada(): boolean {
+    return this.isIniciandoVenta || this.isCancelandoVenta || this.isRegistrandoPago ||
+      this.isConfirmandoVenta || this.productosPendientes > 0 || this.cargandoCatalogo;
+  }
+
+  get carritoBloqueado(): boolean {
+    return this.pagoAbierto || this.isCancelandoVenta || this.productosProcesados ||
+      this.pagoRegistrado || this.cargandoCatalogo;
+  }
+
+  // Facturación
+  ventaCompletadaId: number | null = null;
+  facturaAbierta = false;
+  razonSocial = '';
+  ci = '';
+  clienteSeleccionadoId: number | null = null;
+  clientesSugeridos: any[] = [];
+  mostrarSugerencias = false;
+  buscandoClientes = false;
+  generandoFactura = false;
+  private temporizadorBusqueda: any = null;
 
   modoSidenav: 'over' | 'side' = 'side';
   esMovil = false;
@@ -92,7 +148,8 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
     private cdr: ChangeDetectorRef,
     private toastr: ToastrService,
     private breakpointObserver: BreakpointObserver,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private dialog: MatDialog
   ) {}
 
   /** Normaliza cualquier respuesta a array:
@@ -150,6 +207,7 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
     ...producto,
     imagen_url: imagen,
     total_cantidad: Number(total_cantidad || 0),
+    stock_original: Number(total_cantidad || 0),
     precio_fifo: Number(precio_fifo || 0),
     producto_id: producto?.producto_id ?? producto?.id ?? producto?.codigo ?? null,
     tipo_producto_id: producto?.tipo_producto_id ?? null,
@@ -212,13 +270,23 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // 🔹 Obtener todos los productos
   cargarProductos(): void {
-    this.productosService
-      .listarProductosinfo()
-      .pipe(takeUntil(this.destroy$))
+    this.cargandoCatalogo = true;
+    forkJoin({
+      catalogo: this.productosService.listarProductos(),
+      fifo: this.productosService.listarProductosinfo(),
+    })
+      .pipe(takeUntil(this.destroy$), finalize(() => {
+        this.cargandoCatalogo = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
-        next: (data) => {
-          const arr = this.asArray(data);
-          this.productos = arr.map((p: any) => this.mapProducto(p));
+        next: ({ catalogo, fifo }) => {
+          const stockPorProducto = new Map(this.asArray(fifo).map((p: any) => [Number(p.producto_id), p]));
+          this.productos = catalogo.map((p: any) => this.mapProducto({
+            ...p,
+            ...(stockPorProducto.get(Number(p.producto_id)) ?? {}),
+            descripcion: p.descripcion ?? stockPorProducto.get(Number(p.producto_id))?.descripcion,
+          }));
           this.filtrarProductos();
           this.cdr.markForCheck();
         },
@@ -234,14 +302,56 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // 🔹 Filtrar productos según el tipo y el nombre
   filtrarProductos(): void {
+    this.paginaProductos = 0;
     const nombre = this.filtroNombre.trim().toLowerCase();
     this.productosFiltrados = this.productos.filter((producto) => {
       const coincideTipo =
-        this.tipoSeleccionado === null || producto.tipo_producto_id === this.tipoSeleccionado;
-      const coincideNombre = nombre === '' || (producto.nombre || '').toLowerCase().includes(nombre);
+        this.categoriasSeleccionadas.length === 0 ||
+        this.categoriasSeleccionadas.includes(Number(producto.tipo_producto_id));
+      const coincideNombre = nombre === '' || [producto.nombre, producto.marca, producto.modelo]
+        .some((valor) => String(valor || '').toLowerCase().includes(nombre));
       return coincideTipo && coincideNombre;
     });
     this.cdr.markForCheck();
+  }
+
+  alternarCategoria(id: number | null): void {
+    if (id === null) {
+      this.categoriasSeleccionadas = [];
+    } else {
+      id = Number(id);
+      this.categoriasSeleccionadas = this.categoriasSeleccionadas.includes(id)
+        ? this.categoriasSeleccionadas.filter((categoria) => categoria !== id)
+        : [...this.categoriasSeleccionadas, id];
+    }
+    this.filtrarProductos();
+  }
+
+  abrirFiltros(): void {
+    const ref = this.dialog.open(FiltrosProductoDialogComponent, {
+      width: 'min(520px, 94vw)',
+      data: {
+        tipos: this.tiposProducto.map((tipo) => ({
+          tipo_producto_id: tipo.tipo_producto_id,
+          tipo_producto_nombre: tipo.nombre,
+        })),
+        seleccion: [...this.categoriasSeleccionadas],
+      },
+    });
+
+    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((resultado: number[] | undefined) => {
+      if (!Array.isArray(resultado)) return;
+      this.categoriasSeleccionadas = resultado;
+      this.filtrarProductos();
+    });
+  }
+
+  nombreCategoria(id: number): string {
+    return this.tiposProducto.find((tipo) => tipo.tipo_producto_id === id)?.nombre ?? `Categoría ${id}`;
+  }
+
+  get filtrosActivos(): boolean {
+    return this.filtroNombre.trim().length > 0 || this.categoriasSeleccionadas.length > 0;
   }
 
   // 🔹 Obtener la lista de tipos de producto
@@ -252,19 +362,21 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe({
         next: (response) => {
           const lista = this.asArray(response?.result ?? response);
-          // agrega "Todos"
-          this.tiposProducto = [{ tipo_producto_id: null, nombre: 'Todos' }, ...lista];
+          this.tiposProducto = lista.map((tipo: any) => ({
+            ...tipo, tipo_producto_id: Number(tipo.tipo_producto_id),
+          }));
           this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error al listar tipos de producto:', err);
-          this.tiposProducto = [{ tipo_producto_id: null, nombre: 'Todos' }];
+          this.tiposProducto = [];
           this.cdr.markForCheck();
         },
       });
   }
 
   iniciarVenta(): void {
+    if (this.ventaId !== null || this.ventaOcupada) return;
     const usuarioData = sessionStorage.getItem('user');
     if (!usuarioData) {
       this.toastr.warning('No se encontró el usuario en sesión.', 'Sesión');
@@ -282,19 +394,22 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
       usuarioId: Number(usuario.usuario_id),
     };
 
+    this.isIniciandoVenta = true;
     this.productosService
       .IniciarVenta(params)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntil(this.destroy$), finalize(() => {
+        this.isIniciandoVenta = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (response) => {
           const ventaId = (response?.ventaId ?? response?.result?.ventaId ?? response?.data?.ventaId) ?? null;
-          queueMicrotask(() => {
-            this.ventaId = ventaId;
-            if (!this.ventaId) {
-              this.toastr.error('No se pudo iniciar la venta.', 'Error');
-            }
-            this.cdr.markForCheck();
-          });
+          this.ventaCompletadaId = null;
+          this.ventaId = ventaId;
+          if (!this.ventaId) {
+            this.toastr.error('No se pudo iniciar la venta.', 'Error');
+          }
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error al iniciar venta:', err);
@@ -303,9 +418,54 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
+  cancelarVenta(): void {
+    if (!this.ventaId || this.ventaOcupada || this.pagoRegistrado) return;
+    this.isCancelandoVenta = true;
+    this.productosService.cancelarVenta(this.ventaId)
+      .pipe(takeUntil(this.destroy$), finalize(() => {
+        this.isCancelandoVenta = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: () => {
+          for (const item of this.carrito) {
+            const producto = this.productos.find((p) => p.producto_id === item.producto_id);
+            if (producto) producto.total_cantidad += Number(item.cantidad);
+          }
+          this.carrito = [];
+          this.ventaId = null;
+          this.ventaJson = { ventaId: null, productos: [], usuarioId: null };
+          this.productosProcesados = false;
+          this.pagoRegistrado = false;
+          this.pagoAbierto = false;
+          this.metodoSeleccionado = null;
+          this.pagoPayloadPreview = null;
+          this.codigoBarrasActual = '';
+          this.escaneando = false;
+          clearTimeout(this.timeout);
+          this.toastr.success('Venta cancelada. Los productos vuelven a estar disponibles.');
+          this.cargarProductos();
+        },
+        error: (err) => this.toastr.error(
+          err?.error?.message || 'No se pudo cancelar la venta. Puedes volver a intentarlo.', 'Error'),
+      });
+  }
+
   onBarcodeScan(event: KeyboardEvent): void {
-    if (this.pagoAbierto) return;
+    if (this.carritoBloqueado) return;
     if (this.ventaId === null) return;
+
+    // Ignorar teclas escritas en inputs/textarea/select (que no interfiera con formularios)
+    const target = event.target as HTMLElement | null;
+    const tag = target?.tagName;
+    if (
+      tag === 'INPUT' ||
+      tag === 'TEXTAREA' ||
+      tag === 'SELECT' ||
+      target?.isContentEditable
+    ) {
+      return;
+    }
 
     if (event.key === 'Enter') {
       if (this.codigoBarrasActual.trim() !== '') {
@@ -327,9 +487,14 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   detectarCodigoBarras(codigoBarras: string): void {
+    if (!this.ventaId || this.carritoBloqueado) return;
+    this.productosPendientes++;
     this.productosService
       .listarLotesByCB(codigoBarras)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntil(this.destroy$), finalize(() => {
+        this.productosPendientes--;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (productoEscaneado) => {
           const arr = this.asArray(productoEscaneado);
@@ -343,7 +508,11 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
             productoEncontrado.codigo_barras = codigoBarras;
             this.agregarAlCarrito(productoEncontrado);
           } else {
-            this.toastr.warning('No puedes agregar más unidades de este producto', 'Stock agotado');
+            const stockRegistrado = productoEncontrado.stock_original ?? productoEncontrado.total_cantidad ?? 0;
+            this.toastr.warning(
+              `No puedes agregar más unidades. El stock es de ${stockRegistrado} (registrado en la BD).`,
+              'Stock agotado'
+            );
           }
         },
         error: (err) => {
@@ -371,8 +540,8 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   agregarAlCarrito(producto: any): void {
-    if (this.pagoAbierto) {
-      this.toastr.info('Cierra el cobro antes de agregar productos.');
+    if (this.carritoBloqueado) {
+      this.toastr.info('Termina o cancela el cobro antes de cambiar los productos.');
       return;
     }
     if (!this.ventaId) {
@@ -389,64 +558,83 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if ((producto.total_cantidad ?? 0) <= 0) {
-      this.toastr.warning('No puedes agregar más unidades de este producto', 'Límite alcanzado');
+      const stockRegistrado = producto.stock_original ?? producto.total_cantidad ?? 0;
+      this.toastr.warning(
+        `No puedes agregar más unidades. El stock es de ${stockRegistrado} (registrado en la BD).`,
+        'Límite de stock alcanzado'
+      );
       return;
     }
 
+    // ✅ Reservar la unidad de inmediato (síncrono) para bloquear clics repetidos
+    producto.total_cantidad = Math.max(0, Number(producto.total_cantidad || 0) - 1);
+
+    // Si el producto ya trae su código de barras, se agrega de inmediato
+    if (producto.codigo_barras) {
+      this.aniadirAlCarrito(producto);
+      return;
+    }
+
+    // Sin código de barras conocido se busca el primer lote con stock
+    this.productosPendientes++;
+    this.productosService
+      .listarLotesById(producto.producto_id)
+      .pipe(takeUntil(this.destroy$), finalize(() => {
+        this.productosPendientes--;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: (lotes) => {
+          const lotesArr = this.asArray(lotes);
+          const loteValido = [...lotesArr].reverse().find((l: any) => (l?.cantidad ?? 0) > 0) || null;
+          if (!loteValido?.codigo_barras) {
+            // Devolver la unidad reservada si no hay un lote con stock real
+            producto.total_cantidad = Number(producto.total_cantidad || 0) + 1;
+            const stockRegistrado = producto.stock_original ?? producto.total_cantidad ?? 0;
+            this.toastr.warning(
+              `Sin stock disponible. El stock es de ${stockRegistrado} (registrado en la BD).`,
+              'Stock Agotado'
+            );
+            return;
+          }
+          this.aniadirAlCarrito({
+            ...producto,
+            codigo_barras: String(loteValido.codigo_barras),
+          });
+        },
+        error: (err) => {
+          // Devolver la unidad reservada en caso de fallo del servicio
+          producto.total_cantidad = Number(producto.total_cantidad || 0) + 1;
+          console.error('❌ Error al obtener lotes:', err);
+          this.toastr.error('Error al obtener lotes del producto', 'Error');
+        },
+      });
+  }
+
+  /** Agrega el artículo al carrito. El stock ya fue reservado en agregarAlCarrito. */
+  private aniadirAlCarrito(producto: any): void {
     const productoEnCarrito = this.carrito.find((p) => p.producto_id === producto.producto_id);
     if (productoEnCarrito) {
       productoEnCarrito.cantidad += 1;
     } else {
-      if (producto.codigo_barras) {
-        this.carrito.push({
-          producto_id: producto.producto_id,
-          nombre: producto.nombre,
-          imagen_url: producto.imagen_url,
-          codigo_barras: producto.codigo_barras,
-          precio_fifo: producto.precio_fifo || producto.precio_venta || 0,
-          cantidad: 1,
-        });
-      } else {
-        this.productosService
-          .listarLotesById(producto.producto_id)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (lotes) => {
-              const lotesArr = this.asArray(lotes);
-              const loteValido = [...lotesArr].reverse().find((l: any) => (l?.cantidad ?? 0) > 0) || null;
-              if (loteValido?.codigo_barras) {
-                this.carrito.push({
-                  producto_id: producto.producto_id,
-                  nombre: producto.nombre,
-                  imagen_url: producto.imagen_url,
-                  codigo_barras: String(loteValido.codigo_barras),
-                  precio_fifo: producto.precio_fifo || producto.precio_venta || 0,
-                  cantidad: 1,
-                });
-                this.actualizarVentaJson();
-                this.cdr.markForCheck();
-              } else {
-                this.toastr.warning('Sin stock disponible para este producto', 'Stock Agotado');
-              }
-            },
-            error: (err) => {
-              console.error('❌ Error al obtener lotes:', err);
-              this.toastr.error('Error al obtener lotes del producto', 'Error');
-            },
-          });
-      }
+      this.carrito.push({
+        producto_id: producto.producto_id,
+        nombre: producto.nombre,
+        imagen_url: producto.imagen_url,
+        codigo_barras: String(producto.codigo_barras),
+        precio_fifo: producto.precio_fifo || producto.precio_venta || 0,
+        cantidad: 1,
+      });
     }
 
-    // Reducir stock visualmente
-    producto.total_cantidad = Math.max(0, Number(producto.total_cantidad || 0) - 1);
-
+    // El stock ya se reservó de forma síncrona en agregarAlCarrito
     this.actualizarVentaJson();
     this.cdr.markForCheck();
   }
 
   restarDelCarrito(producto: any): void {
-    if (this.pagoAbierto) {
-      this.toastr.info('Cierra el cobro antes de quitar productos.');
+    if (this.carritoBloqueado) {
+      this.toastr.info('Termina o cancela el cobro antes de cambiar los productos.');
       return;
     }
 
@@ -469,11 +657,9 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   abrirPago(): void {
-    queueMicrotask(() => {
-      this.pagoAbierto = true;
-      this.metodoSeleccionado = null;
-      this.cdr.markForCheck();
-    });
+    if (!this.ventaId || !this.carrito.length || this.ventaOcupada) return;
+    this.pagoAbierto = true;
+    this.cdr.markForCheck();
 
     this.productosService
       .listarMetPago()
@@ -500,6 +686,7 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   cerrarPago(): void {
+    if (this.ventaOcupada) return;
     queueMicrotask(() => {
       this.pagoAbierto = false;
       this.cdr.markForCheck();
@@ -507,6 +694,7 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   seleccionarMetodo(m: { id: number; nombre: string }): void {
+    if (this.ventaOcupada || this.pagoRegistrado) return;
     this.metodoSeleccionado = m;
     const total = this.calcularTotal();
     const monto = total.toFixed(2);
@@ -563,6 +751,7 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
             .subscribe({
               next: () => {
                 this.toastr.success('Venta realizada con éxito', 'Éxito');
+                this.ventaCompletadaId = this.ventaId;
                 this.carrito = [];
                 this.ventaId = null;
                 this.ventaJson = { ventaId: null, productos: [], usuarioId: null };
@@ -589,7 +778,7 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   limpiarFiltros(): void {
-    this.tipoSeleccionado = null;
+    this.categoriasSeleccionadas = [];
     this.filtroNombre = '';
     this.filtrarProductos();
   }
@@ -653,6 +842,11 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async registrarPagoYConfirmar(): Promise<void> {
+    if (this.ventaOcupada) return;
+    if (this.pagoRegistrado) {
+      this.confirmarVentaSolo();
+      return;
+    }
     if (!this.validarAntesDeRegistrarPago()) return;
 
     this.isRegistrandoPago = true;
@@ -664,18 +858,18 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
       const body = { ...this.pagoPayloadPreview };
       this.productosService
         .registrarMetPago(body)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(takeUntil(this.destroy$), finalize(() => {
+          this.isRegistrandoPago = false;
+          this.cdr.markForCheck();
+        }))
         .subscribe({
           next: () => {
+            this.pagoRegistrado = true;
             this.confirmarVentaSolo();
           },
           error: (err) => {
             console.error('❌ Error al registrar pago:', err);
             this.toastr.error('No se pudo registrar el pago.', 'Error');
-          },
-          complete: () => {
-            this.isRegistrandoPago = false;
-            this.cdr.markForCheck();
           },
         });
     } catch (_) {
@@ -685,6 +879,7 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   confirmarVentaSolo(): void {
+    if (this.isConfirmandoVenta || this.isCancelandoVenta) return;
     if (!this.ventaId) {
       this.toastr.warning('No hay una venta activa para confirmar.', 'Atención');
       return;
@@ -696,15 +891,20 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
     const body = { ventaId: this.ventaId };
     this.productosService
       .confirmarVenta(body)
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntil(this.destroy$), finalize(() => {
+        this.isConfirmandoVenta = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: () => {
           this.toastr.success('Venta confirmada con éxito. ¡Gracias!', 'Éxito');
 
+          this.ventaCompletadaId = this.ventaId;
           this.carrito = [];
           this.ventaId = null;
           this.ventaJson = { ventaId: null, productos: [], usuarioId: null };
           this.productosProcesados = false;
+          this.pagoRegistrado = false;
 
           this.metodoSeleccionado = null;
           this.pagoPayloadPreview = null;
@@ -719,8 +919,126 @@ export class VentasComponent implements OnInit, OnDestroy, AfterViewInit {
             'Atención'
           );
         },
-        complete: () => {
-          this.isConfirmandoVenta = false;
+      });
+  }
+
+  // =========================================================
+  // 🧾 FACTURACIÓN
+  // =========================================================
+  abrirFacturacion(): void {
+    this.razonSocial = '';
+    this.ci = '';
+    this.clienteSeleccionadoId = null;
+    this.clientesSugeridos = [];
+    this.mostrarSugerencias = false;
+    this.generandoFactura = false;
+    this.facturaAbierta = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarFacturacion(): void {
+    this.facturaAbierta = false;
+    this.mostrarSugerencias = false;
+    if (this.temporizadorBusqueda) {
+      clearTimeout(this.temporizadorBusqueda);
+      this.temporizadorBusqueda = null;
+    }
+    this.cdr.markForCheck();
+  }
+
+  onBuscarClientes(): void {
+    // Si se vuelve a escribir, deja de ser una selección inequívoca del padrón.
+    this.clienteSeleccionadoId = null;
+    if (this.temporizadorBusqueda) {
+      clearTimeout(this.temporizadorBusqueda);
+    }
+
+    const termino = this.razonSocial.trim();
+    if (termino.length < 2) {
+      this.clientesSugeridos = [];
+      this.mostrarSugerencias = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.temporizadorBusqueda = setTimeout(() => {
+      this.buscandoClientes = true;
+      this.productosService.buscarClientes(termino).subscribe({
+        next: (resp: any) => {
+          const arr = Array.isArray(resp)
+            ? resp
+            : resp?.result ?? resp?.data ?? resp?.rows ?? [];
+          this.clientesSugeridos = Array.isArray(arr) ? arr : [];
+          this.mostrarSugerencias = this.clientesSugeridos.length > 0;
+          this.buscandoClientes = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.clientesSugeridos = [];
+          this.mostrarSugerencias = false;
+          this.buscandoClientes = false;
+          this.cdr.markForCheck();
+        },
+      });
+    }, 350);
+  }
+
+  seleccionarCliente(cliente: any): void {
+    if (this.temporizadorBusqueda) {
+      clearTimeout(this.temporizadorBusqueda);
+      this.temporizadorBusqueda = null;
+    }
+    this.razonSocial = cliente?.nombre ?? this.razonSocial;
+    const clienteId = Number(cliente?.cliente_id);
+    this.clienteSeleccionadoId =
+      Number.isInteger(clienteId) && clienteId > 0 ? clienteId : null;
+    this.buscandoClientes = false;
+    this.mostrarSugerencias = false;
+    this.clientesSugeridos = [];
+    this.cdr.markForCheck();
+  }
+
+  generarFacturaPDF(): void {
+    if (!this.ventaCompletadaId) {
+      this.toastr.warning('No hay una venta completa para facturar.', 'Atención');
+      return;
+    }
+    if (!this.razonSocial.trim()) {
+      this.toastr.warning('Ingresa la razón social del cliente.', 'Atención');
+      return;
+    }
+    if (!this.ci.trim()) {
+      this.toastr.warning('Ingresa la cédula de identidad del cliente.', 'Atención');
+      return;
+    }
+
+    this.generandoFactura = true;
+    this.cdr.markForCheck();
+
+    this.productosService
+      .generarFactura({
+        ventaId: this.ventaCompletadaId,
+        clienteId: this.clienteSeleccionadoId ?? undefined,
+        razonSocial: this.razonSocial.trim(),
+        ci: this.ci.trim(),
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob: Blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Factura_Venta_${this.ventaCompletadaId}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+          this.toastr.success('Factura generada correctamente.', 'Éxito');
+          this.cerrarFacturacion();
+        },
+        error: () => {
+          this.toastr.error('No se pudo generar la factura.', 'Error');
+          this.generandoFactura = false;
           this.cdr.markForCheck();
         },
       });

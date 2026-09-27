@@ -1,0 +1,4 @@
+:host { display: block; }
+.product-detail { margin-bottom: 24px; h2 { margin: 10px 0; font-size: 24px; letter-spacing: -.6px; } p { color: var(--rm-muted); font-size: 13px; line-height: 1.7; } }
+.detail-image { height: 220px; padding: 24px; background: var(--rm-soft); border: 1px solid var(--rm-border); border-radius: 10px; margin-bottom: 24px; img { width: 100%; height: 100%; object-fit: contain; } }
+.detail-actions { display: flex; flex-wrap: wrap; gap: 10px; button { flex: 1 1 140px; } }

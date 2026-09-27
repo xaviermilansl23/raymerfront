@@ -21,6 +21,12 @@ export class AuthGuard implements CanActivate {
       return false;
     }
 
+    // Token vencido: cerrar sesión y volver a login
+    if (this.authService.isTokenExpired()) {
+      this.authService.logout();
+      return false;
+    }
+
     const userRoles = this.authService.getRoles();
     const requiredRoles = route.data['roles'] as string[] | undefined;
 

@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { ConfirmarEliminarDialogComponent } from './confirmar-eliminar-dialog.component';
+import { dialogRefStub, matDialogDataStub } from '../../services/test-stubs';
 
 describe('ConfirmarEliminarDialogComponent', () => {
   let component: ConfirmarEliminarDialogComponent;
@@ -8,7 +10,11 @@ describe('ConfirmarEliminarDialogComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ConfirmarEliminarDialogComponent]
+      imports: [ConfirmarEliminarDialogComponent],
+      providers: [
+        { provide: MatDialogRef, useValue: dialogRefStub },
+        { provide: MAT_DIALOG_DATA, useValue: matDialogDataStub },
+      ],
     })
     .compileComponents();
 

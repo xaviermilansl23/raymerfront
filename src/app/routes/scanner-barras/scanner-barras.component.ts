@@ -83,6 +83,8 @@ export class ScannerBarrasComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.html5QrCode?.stop().catch(() => {});
+    if (this.html5QrCode && this.scanning) {
+      this.html5QrCode.stop().catch(() => {});
+    }
   }
 }

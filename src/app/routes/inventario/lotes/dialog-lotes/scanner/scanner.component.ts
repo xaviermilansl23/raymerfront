@@ -72,7 +72,11 @@ audio.play().catch(err => console.error('Error al reproducir sonido:', err));
 
   ngOnDestroy(): void {
     if (this.html5QrCode) {
-      this.html5QrCode.stop().catch(err => console.warn('Error al detener escáner:', err));
+      try {
+        this.html5QrCode.stop().catch(err => console.warn('Error al detener escáner:', err));
+      } catch (_err) {
+        // El escáner nunca llegó a iniciarse
+      }
     }
   }
 

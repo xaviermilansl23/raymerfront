@@ -1,12 +1,21 @@
-
-
+<div class="product-detail" *ngIf="producto">
+  <div class="detail-image">
+    <img [src]="producto.imagen_url" [alt]="producto.nombre" />
+  </div>
+  <span class="eyebrow">Información del producto</span>
+  <h2>{{ producto.nombre }}</h2>
+  <p *ngIf="producto.marca || producto.modelo">
+    <strong>Marca:</strong> {{ producto.marca || "Sin marca" }} ·
+    <strong>Modelo:</strong> {{ producto.modelo || "Sin modelo" }}
+  </p>
+  <p>{{ producto.descripcion || "Sin descripción disponible." }}</p>
+</div>
+<div class="detail-actions">
   <button mat-raised-button color="primary" (click)="editarProducto()">
-    Editar
+    Editar producto
   </button>
-
-  <button mat-raised-button color="warn" (click)="abrirModalEliminar()">
-    🗑️ Eliminar
+  <button mat-stroked-button (click)="verLotes()">Ver lotes</button>
+  <button mat-button color="warn" (click)="abrirModalEliminar()">
+    Eliminar producto
   </button>
-
-  <button mat-raised-button color="warn" (click)="verLotes()">Lotes</button>
-
+</div>

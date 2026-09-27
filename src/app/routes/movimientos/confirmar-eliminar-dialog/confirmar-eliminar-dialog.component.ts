@@ -2,11 +2,13 @@ import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   imports : [
     MatButtonModule,
-    MatDialogModule
+    MatDialogModule,
+    MatIconModule
 
   ],
   selector: 'app-confirmar-eliminar-dialog',

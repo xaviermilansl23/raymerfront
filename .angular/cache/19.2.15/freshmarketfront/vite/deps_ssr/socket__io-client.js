@@ -4088,22 +4088,22 @@ var require_websocket_server = __commonJS({
         const version = +req.headers["sec-websocket-version"];
         if (req.method !== "GET") {
           const message = "Invalid HTTP method";
-          abortHandshakeOrEmitwsGERENTError(this, req, socket, 405, message);
+          abortHandshakeOrEmitwsClientError(this, req, socket, 405, message);
           return;
         }
         if (upgrade === void 0 || upgrade.toLowerCase() !== "websocket") {
           const message = "Invalid Upgrade header";
-          abortHandshakeOrEmitwsGERENTError(this, req, socket, 400, message);
+          abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
         }
         if (key === void 0 || !keyRegex.test(key)) {
           const message = "Missing or invalid Sec-WebSocket-Key header";
-          abortHandshakeOrEmitwsGERENTError(this, req, socket, 400, message);
+          abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
         }
         if (version !== 8 && version !== 13) {
           const message = "Missing or invalid Sec-WebSocket-Version header";
-          abortHandshakeOrEmitwsGERENTError(this, req, socket, 400, message);
+          abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
           return;
         }
         if (!this.shouldHandle(req)) {
@@ -4117,7 +4117,7 @@ var require_websocket_server = __commonJS({
             protocols = subprotocol.parse(secWebSocketProtocol);
           } catch (err) {
             const message = "Invalid Sec-WebSocket-Protocol header";
-            abortHandshakeOrEmitwsGERENTError(this, req, socket, 400, message);
+            abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
             return;
           }
         }
@@ -4133,7 +4133,7 @@ var require_websocket_server = __commonJS({
             }
           } catch (err) {
             const message = "Invalid or unacceptable Sec-WebSocket-Extensions header";
-            abortHandshakeOrEmitwsGERENTError(this, req, socket, 400, message);
+            abortHandshakeOrEmitwsClientError(this, req, socket, 400, message);
             return;
           }
         }
@@ -4240,11 +4240,11 @@ var require_websocket_server = __commonJS({
       socket.end(`HTTP/1.1 ${code} ${http.STATUS_CODES[code]}\r
 ` + Object.keys(headers).map((h) => `${h}: ${headers[h]}`).join("\r\n") + "\r\n\r\n" + message);
     }
-    function abortHandshakeOrEmitwsGERENTError(server, req, socket, code, message) {
-      if (server.listenerCount("wsGERENTError")) {
+    function abortHandshakeOrEmitwsClientError(server, req, socket, code, message) {
+      if (server.listenerCount("wsClientError")) {
         const err = new Error(message);
-        Error.captureStackTrace(err, abortHandshakeOrEmitwsGERENTError);
-        server.emit("wsGERENTError", err, socket, req);
+        Error.captureStackTrace(err, abortHandshakeOrEmitwsClientError);
+        server.emit("wsClientError", err, socket, req);
       } else {
         abortHandshake(socket, code, message);
       }

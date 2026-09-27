@@ -65,19 +65,29 @@ export class UsuariosComponent implements OnInit {
   }
 
   cargarUsuarios() {
-    this.service.listarusuarios().subscribe((res) => {
-      this.dataSource.data = res;
-      this.dataSource.paginator = this.paginatorUsuarios;
+    this.service.listarusuarios().subscribe({
+      next: (res) => {
+        this.dataSource.data = res;
+        this.dataSource.paginator = this.paginatorUsuarios;
+      },
+      error: () => {
+        this.toastr.error('Error al cargar los usuarios');
+      }
     });
   }
 
   cargarUsuariosConRol() {
-    this.service.listarusuariosRol().subscribe((res) => {
-      // Agrupar roles si hay múltiples por usuario
-      const agrupados = this.agruparRolesPorUsuario(res);
-      this.usuariosConRol = agrupados;
-      this.dataSourceRoles.data = agrupados;
-      this.dataSourceRoles.paginator = this.paginatorRoles;
+    this.service.listarusuariosRol().subscribe({
+      next: (res) => {
+        // Agrupar roles si hay múltiples por usuario
+        const agrupados = this.agruparRolesPorUsuario(res);
+        this.usuariosConRol = agrupados;
+        this.dataSourceRoles.data = agrupados;
+        this.dataSourceRoles.paginator = this.paginatorRoles;
+      },
+      error: () => {
+        this.toastr.error('Error al cargar los usuarios con roles');
+      }
     });
   }
 
@@ -121,8 +131,10 @@ export class UsuariosComponent implements OnInit {
         });
 
         dialogRef.afterClosed().subscribe(result => {
-          if (result === 'Usuario creado con exito') {
+          if (result === 'creado') {
             this.cargarUsuarios();
+            this.cargarUsuariosConRol();
+            this.toastr.success('Usuario creado con éxito');
           }
         });
       }
@@ -135,11 +147,12 @@ export class UsuariosComponent implements OnInit {
           data: usuario
 
         });
-        console.log(usuario)
 
         dialogRef.afterClosed().subscribe(result => {
           if (result === 'actualizado') {
             this.cargarUsuarios();
+            this.cargarUsuariosConRol();
+            this.toastr.success('Usuario actualizado con éxito');
           }
         });
       }

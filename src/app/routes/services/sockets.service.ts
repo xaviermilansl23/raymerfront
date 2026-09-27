@@ -14,12 +14,16 @@ export class SocketService {
   constructor(private ngZone: NgZone) {
     // 🛑 Si ya se instanció una vez, no vuelvas a conectar
     if (SocketService.instanciaActiva) return;
+
+    const usuarioId = this.obtenerUsuarioId();
+    const token = this.obtenerToken();
+    // Solo conecta en navegador y si hay una sesión válida con usuario
+    if (this.esNavegador() === false || !usuarioId || !token) return;
+
     SocketService.instanciaActiva = true;
 
-    const usuarioId = JSON.parse(sessionStorage.getItem('user') || '{}')?.usuario_id;
-   // console.log('🧠 SocketService usuarioId:', usuarioId);
-
     this.socket = io(environment.socketUrl, {
+      auth: { token },
       query: { usuarioId },
       reconnection: true,
       reconnectionAttempts: 10,
@@ -41,6 +45,27 @@ export class SocketService {
         this.codigoEscaneado$.next(codigo);
       });
     });
+  }
+
+  private esNavegador(): boolean {
+    return typeof window !== 'undefined' && typeof sessionStorage !== 'undefined';
+  }
+
+  private obtenerToken(): string | null {
+    if (this.esNavegador() === false) return null;
+    return sessionStorage.getItem('token');
+  }
+
+  private obtenerUsuarioId(): number | null {
+    if (this.esNavegador() === false) return null;
+    try {
+      const raw = sessionStorage.getItem('user');
+      const id = raw ? JSON.parse(raw)?.usuario_id : null;
+      const n = Number(id);
+      return Number.isInteger(n) && n > 0 ? n : null;
+    } catch {
+      return null;
+    }
   }
 
   enviarCodigo(usuarioId: number, codigoBarras: string) {

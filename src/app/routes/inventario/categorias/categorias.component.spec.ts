@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CategoriasComponent } from './categorias.component';
+import { FreshService } from '../../services/fresh.service';
+import { freshServiceStub } from '../../services/test-stubs';
 
 describe('CategoriasComponent', () => {
   let component: CategoriasComponent;
@@ -8,7 +10,8 @@ describe('CategoriasComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CategoriasComponent]
+      imports: [CategoriasComponent],
+      providers: [{ provide: FreshService, useValue: freshServiceStub() }],
     })
     .compileComponents();
 

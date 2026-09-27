@@ -28,33 +28,38 @@ export class LoginComponent {
   usuario: string = '';
   contrasena: string = '';
   errorMessage: string | null = null;
+  enviando: boolean = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
-    if (!this.usuario || !this.contrasena) {
+    if (this.enviando) return;
+
+    if (!this.usuario?.trim() || !this.contrasena) {
       this.errorMessage = 'Por favor, completa todos los campos.';
       return;
     }
 
     // ✅ Backend espera 'contrasena' (sin ñ)
     const credentials = {
-      usuario: this.usuario,
+      usuario: this.usuario.trim(),
       contrasena: this.contrasena
     };
 
+    this.enviando = true;
+    this.errorMessage = null;
+
     this.authService.login(credentials).subscribe({
       next: (response) => {
+        this.enviando = false;
         if (response && response.token) {
-          sessionStorage.setItem('user', JSON.stringify(response.usuario));
-          sessionStorage.setItem('token', response.token);
           this.router.navigate(['/dashboard']);
         } else {
           this.errorMessage = 'Respuesta inesperada del servidor.';
         }
       },
       error: (err) => {
-        console.error('Error en el inicio de sesión:', err);
+        this.enviando = false;
         this.errorMessage =
           err?.error?.message || 'Credenciales incorrectas. Inténtalo de nuevo.';
       },

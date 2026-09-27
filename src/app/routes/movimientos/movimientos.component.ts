@@ -1,32 +1,23 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { FreshService } from '../services/fresh.service';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatInputModule } from '@angular/material/input';
-import { MatSortModule } from '@angular/material/sort';
-import { MatTableModule } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
-import { MatButton } from '@angular/material/button';
-import { MatIcon } from '@angular/material/icon';
 import { ToastrService } from 'ngx-toastr';
-import { DataSource } from '@angular/cdk/collections';
 import { FormsModule } from '@angular/forms';
-import { matDatepickerAnimations } from '@angular/material/datepicker';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatCard } from '@angular/material/card';
 import { MatCardModule } from '@angular/material/card';
 import { CrearGastoDialogComponent } from './crear-gasto-dialog/crear-gasto-dialog.component';
 import { ConfirmarEliminarDialogComponent } from './confirmar-eliminar-dialog/confirmar-eliminar-dialog.component';
 import { MatButtonModule } from '@angular/material/button';
-import {  MatDividerModule } from '@angular/material/divider';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-import { ChangeDetectorRef } from '@angular/core';
 import { MatOptionModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 
@@ -54,7 +45,7 @@ import { MatSelectModule } from '@angular/material/select';
   styleUrl: './movimientos.component.scss'
 })
 export class MovimientosComponent {
-  displayedColumns: string[] = ['numero','fecha', 'productos', 'montoTotal','metodoPago',  'estado']; // Para ventas
+  displayedColumns: string[] = ['numero','fecha', 'productos', 'montoTotal','metodoPago', 'estado', 'factura']; // Para ventas
   displayedColumnsGastos: string[] = ['numero','fecha', 'nombre', 'descripcion', 'total', 'acciones'];
   ventas: any[] = [];
   fechaHoy: string = new Date().toISOString().split('T')[0];
@@ -71,6 +62,7 @@ export class MovimientosComponent {
   datosCargados = false;
   metodosPagoCatalogo: Array<{ id: number; nombre: string; activo: boolean }> = [];
   metodosPagoSeleccionados: number[] = []; // IDs seleccionados en el filtro
+  facturaGenerandoVentaId: number | null = null;
 
 
 
@@ -361,6 +353,56 @@ eliminarGasto(gastoId: number): void {
       return 'Sin productos'; // Si productos es null, undefined o vacío, devolvemos un mensaje
     }
     return productos.map(p => `${p.cantidad} ${p.producto}`).join(', ');
+  }
+
+  verFactura(venta: any): void {
+    const ventaId = Number(venta?.venta_id);
+    if (!Number.isInteger(ventaId) || ventaId <= 0) {
+      this.toastr.error('La venta no tiene un identificador válido.', 'Error');
+      return;
+    }
+
+    if (!venta?.factura_emitida) {
+      this.toastr.info('Esta venta todavía no tiene una factura emitida.', 'Factura');
+      return;
+    }
+
+    // Se abre durante el clic para que el navegador no bloquee la pestaña.
+    const visor = window.open('about:blank', '_blank');
+    if (visor) {
+      visor.document.title = `Factura ${ventaId}`;
+      visor.document.body.innerHTML =
+        '<p style="font-family:Arial,sans-serif;padding:24px">Generando factura...</p>';
+    }
+
+    this.facturaGenerandoVentaId = ventaId;
+    this.ventasService.generarFactura({ ventaId }).subscribe({
+      next: (blob: Blob) => {
+        const pdfUrl = window.URL.createObjectURL(blob);
+
+        if (visor && !visor.closed) {
+          visor.location.replace(pdfUrl);
+        } else {
+          const enlace = document.createElement('a');
+          enlace.href = pdfUrl;
+          enlace.download = `Factura_Venta_${ventaId}.pdf`;
+          document.body.appendChild(enlace);
+          enlace.click();
+          enlace.remove();
+        }
+
+        // El visor necesita conservar la URL mientras termina de cargar el PDF.
+        window.setTimeout(() => window.URL.revokeObjectURL(pdfUrl), 60_000);
+        this.facturaGenerandoVentaId = null;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (visor && !visor.closed) visor.close();
+        this.facturaGenerandoVentaId = null;
+        this.toastr.error('No se pudo volver a generar la factura.', 'Error');
+        this.cdr.markForCheck();
+      },
+    });
   }
 
 

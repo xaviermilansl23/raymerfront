@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms'; // ✅ Importar módulos de formularios
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
 import { ToastrService } from 'ngx-toastr';
 
 @Component({
@@ -19,6 +20,7 @@ import { ToastrService } from 'ngx-toastr';
     ReactiveFormsModule,
     MatButtonModule,
     MatInputModule,
+    MatIconModule
 
   ],
   templateUrl: './crear-gasto-dialog.component.html',
